@@ -7,7 +7,7 @@ st.set_page_config(
 )
 
 st.markdown(
-    "[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://www.github.com/punsii2)"
+    "[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/punsii2/MobileMappingWS2024)"
 )
 
 

@@ -1,32 +1,53 @@
 {
-  description = "A very basic flake";
+  description = "Mobile Mapping WS2024";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
-  outputs = { self, nixpkgs }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      treefmt-nix,
+      ...
+    }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+      treefmtEval = treefmt-nix.lib.evalModule pkgs {
+        # Used to find the project root
+        projectRootFile = "flake.nix";
+
+        programs = {
+          black.enable = true;
+          isort.enable = true;
+          prettier.enable = true;
+          nixfmt.enable = true;
+        };
+      };
       python = pkgs.python3.override {
-        packageOverrides = self:
-          super: {
-            opencv4 = super.opencv4.override {
-              inherit (pkgs) gtk2;
-              enableGtk2 = true;
-              enableFfmpeg = true; #here is how to add ffmpeg and other compilation flags
-            };
+        packageOverrides = self: super: {
+          opencv4 = super.opencv4.override {
+            inherit (pkgs) gtk2;
+            enableGtk2 = true;
+            enableFfmpeg = true;
           };
+        };
         self = python;
       };
-      pythonEnv = python.withPackages (ps: with ps; [
-        black
-        matplotlib
-        numpy
-        opencv4
-        pip
-        virtualenv
-      ]);
+      pythonEnv = python.withPackages (
+        ps: with ps; [
+          matplotlib
+          numpy
+          opencv4
+          plotly
+          plyfile
+        ]
+      );
       pythonApp = pkgs.python3Packages.buildPythonPackage {
         name = "readstray";
         src = ./src;
@@ -40,18 +61,15 @@
         default = pythonApp;
       };
 
-      devShells.${system}.default =
-        pkgs.mkShell {
-          packages = with pkgs;
-            [
-              pythonEnv
-              treefmt
-              vlc
-              nixpkgs-fmt
-              streamlit
-            ];
-        };
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          treefmtEval.config.build.wrapper
+          pythonEnv
+          vlc
+          streamlit
+        ];
+      };
 
-      formatter.${system} = pkgs.nixpkgs-fmt;
+      formatter.${system} = treefmtEval.config.build.wrapper;
     };
 }

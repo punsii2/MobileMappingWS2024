@@ -5,17 +5,15 @@ st.set_page_config(
     page_icon="🗺️",
     initial_sidebar_state="expanded",
 )
-
-st.markdown(
-    "[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/punsii2/MobileMappingWS2024)"
-)
-
-
 st.sidebar.success("Select a chapter above.")
 
 st.markdown(
+    "[![GitHub](https://img.shields.io/badge/github-%2523121011.svg?style=for-the-badge&logo=github&color=AB00AB)](https://github.com/punsii2/MobileMappingWS2024)"
+)
+
+st.markdown(
     """
-    =====Placeholder=====
+   <===== Pick an exercise page in the sidebar
 """
 )
 

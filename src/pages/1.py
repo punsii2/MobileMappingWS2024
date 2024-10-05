@@ -63,14 +63,14 @@ with tabs[2]:
         max_columns = image.shape[1]
 
         if len(image.shape) > 2:
-            # top edge
-            image[0:width, :, :] = 0
-            # bottom edge
-            image[max_rows - width : max_rows, :, :] = 0
-            # left edge
-            image[:, 0:width, :] = 0
-            # right edge
-            image[:, max_columns - width : max_columns, :] = 0
+            # top left
+            image[0:width, 0:width, :] = 0
+            # bottom left
+            image[max_rows - width : max_rows, 0:width, :] = 0
+            # top right
+            image[0:width, max_columns - width : max_columns, :] = 0
+            # bottom right
+            image[max_rows - width :, max_columns - width : max_columns, :] = 0
             # middle
             image[
                 int((max_rows - width) / 2) : int((max_rows + width) / 2),
@@ -79,14 +79,14 @@ with tabs[2]:
             ] = 0
 
         else:
-            # top edge
-            image[0:width, :] = 0
-            # bottom edge
-            image[max_rows - width : max_rows, :] = 0
-            # left edge
-            image[:, 0:width] = 0
-            # right edge
-            image[:, max_columns - width : max_columns] = 0
+            # top left
+            image[0:width, 0:width] = 0
+            # bottom left
+            image[max_rows - width : max_rows, 0:width] = 0
+            # top right
+            image[0:width, max_columns - width : max_columns] = 0
+            # bottom right
+            image[max_rows - width :, max_columns - width : max_columns] = 0
             # middle
             image[
                 int((max_rows - width) / 2) : int((max_rows + width) / 2),
@@ -94,7 +94,7 @@ with tabs[2]:
             ] = 0
         return image
 
-    width = st.slider("Width of black mask:", 0, 250, 50)
+    width = st.slider("Width of black mask:", 0, 400, 100)
     st.image(apply_black_mask(image, width))
     st.image(apply_black_mask(image_gray, width))
 

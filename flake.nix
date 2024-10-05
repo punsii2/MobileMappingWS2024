@@ -46,15 +46,13 @@
           opencv4
           plotly
           plyfile
+          streamlit
         ]
       );
       streamlitRun = pkgs.writeShellApplication {
         name = "streamlitRun";
-        runtimeInputs = with pkgs; [
-          pythonEnv
-          streamlit
-        ];
-        text = ''${pkgs.streamlit}/bin/streamlit run ./src/MobileMappingWS2024.py'';
+        runtimeInputs = [ pythonEnv ];
+        text = ''${pythonEnv}/bin/python3 -m streamlit run ./src/MobileMappingWS2024.py'';
       };
     in
     {
@@ -64,13 +62,13 @@
           program = "${streamlitRun}/bin/streamlitRun";
         };
       };
+      packages.${system}.default = pythonEnv;
 
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           treefmtEval.config.build.wrapper
           pythonEnv
           vlc
-          streamlit
         ];
       };
 

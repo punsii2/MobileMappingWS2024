@@ -48,17 +48,21 @@
           plyfile
         ]
       );
-      pythonApp = pkgs.python3Packages.buildPythonPackage {
-        name = "readstray";
-        src = ./src;
-        propagatedBuildInputs = [ pythonEnv ];
-        doCheck = false;
+      streamlitRun = pkgs.writeShellApplication {
+        name = "streamlitRun";
+        runtimeInputs = with pkgs; [
+          pythonEnv
+          streamlit
+        ];
+        text = ''${pkgs.streamlit}/bin/streamlit run ./src/MobileMappingWS2024.py'';
       };
     in
     {
-      packages.${system} = {
-        inherit pythonApp;
-        default = pythonApp;
+      apps.${system} = {
+        default = {
+          type = "app";
+          program = "${streamlitRun}/bin/streamlitRun";
+        };
       };
 
       devShells.${system}.default = pkgs.mkShell {

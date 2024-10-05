@@ -1,3 +1,5 @@
+from os import environ
+
 import streamlit as st
 
 st.set_page_config(
@@ -16,6 +18,11 @@ st.markdown(
    <===== Pick an exercise page in the sidebar
 """
 )
+
+with open(environ["SOURCE_ZIP_PATH"], "rb") as f:
+    st.download_button(
+        "Download source code as zip", f, file_name="MobileMappingWs24Menhart.zip"
+    )
 
 
 #

@@ -49,10 +49,30 @@
           streamlit
         ]
       );
+      sourceZip =
+        let
+          zipName = "mmWs24MenhartSourceCode.zip";
+        in
+        pkgs.stdenv.mkDerivation {
+          name = "sourceZip";
+          buildInputs = with pkgs; [ zip ];
+          src = ./.;
+          buildPhase = ''
+            zip -r ${zipName} .
+          '';
+          installPhase = ''
+            cp ${zipName} $out
+          '';
+        };
       streamlitRun = pkgs.writeShellApplication {
         name = "streamlitRun";
-        runtimeInputs = [ pythonEnv ];
-        text = ''${pythonEnv}/bin/python3 -m streamlit run ./src/MobileMappingWS2024.py'';
+        runtimeInputs = [
+          pythonEnv
+          sourceZip
+        ];
+        text = ''
+          export SOURCE_ZIP_PATH=${sourceZip}
+          ${pythonEnv}/bin/python3 -m streamlit run ./src/MobileMappingWS2024.py'';
       };
     in
     {

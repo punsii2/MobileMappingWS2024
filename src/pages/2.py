@@ -1,15 +1,12 @@
 import os
-from math import pi
+from math import atan2, cos, pi, sin
 from pathlib import Path
-from time import sleep
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import pytransform3d.camera as pc
-import pytransform3d.rotations as pr
 import pytransform3d.transformations as pt
 import streamlit as st
 import transforms3d as tr
@@ -143,10 +140,115 @@ task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
-task += 1
-with tabs[task - 1]:
-    st.write(f"## 7.1.{EXERCISE}.{task}")
+    st.code(
+        """
+        def setRPY(r: float, p: float, y: float):
+            cr, cp, cy = cos(r), cos(p), cos(y)
+            sr, sp, sy = sin(r), sin(p), sin(y)
+            return np.matrix(
+                [
+                    [cp * cy, cy * sr * sp - cr * sy, sr * sy + cr * cy * sp],
+                    [cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - cy * sr],
+                    [-sp, cp * sr, cr * cp],
+                ]
+            )
+
+        def getRPY(R):
+            y = atan2(R[1, 0], R[0, 0])
+            p = atan2(-R[2, 0], R[0, 0] * cos(y) + R[1, 0] * sin(y))
+            r = atan2(R[2, 1] / cos(p), R[2, 2] / cos(p))
+            return [r, p, y]
+    """
+    )
+
+    def setRPY(r: float, p: float, y: float):
+        cr, cp, cy = cos(r), cos(p), cos(y)
+        sr, sp, sy = sin(r), sin(p), sin(y)
+        return np.matrix(
+            [
+                [cp * cy, cy * sr * sp - cr * sy, sr * sy + cr * cy * sp],
+                [cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - cy * sr],
+                [-sp, cp * sr, cr * cp],
+            ]
+        )
+
+    def getRPY(R):
+        y = atan2(R[1, 0], R[0, 0])
+        p = atan2(-R[2, 0], R[0, 0] * cos(y) + R[1, 0] * sin(y))
+        r = atan2(R[2, 1] / cos(p), R[2, 2] / cos(p))
+        return [r, p, y]
+
+    [r, p, y] = angles
+    st.code(f"{[r, p, y]=}")
+
+    M = setRPY(r, p, y)
+    st.code("M = setRPY(r, p, y) = ")
+    st.write(pd.DataFrame(M))
+
+    [r2, p2, y2] = getRPY(M)
+    st.code("[r2, p2, y2] = getRPY(M) = ")
+    st.write(getRPY(M))
+
 
 task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
+
+    def isRot(M):
+        # allclose handles floats more gracefully than equals
+        return np.allclose(
+            np.matmul(M, np.linalg.inv(M)), np.identity(3)
+        ) and np.allclose(np.linalg.det(M), 1)
+
+    st.code(
+        """def isRot(M):
+        # allclose handles floats more gracefully than equals
+        return np.allclose(
+            np.matmul(M, np.linalg.inv(M)), np.identity(3)
+        ) and np.allclose(np.linalg.det(M), 1)
+        """
+    )
+
+    st.write("M = ")
+    st.write(pd.DataFrame(M))
+    st.code(f"isRot(M) = {isRot(M)}")
+
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
+    M4 = [
+        [cos(pi / 4.0), sin(pi / 4.0), 0.0, 0.0],
+        [-sin(pi / 4.0), cos(pi / 4.0), 0.0, 0.0],
+        [0.0, 0.0, 1.0, 5.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
+    [T, R, _, _] = tr.affines.decompose44(M4)
+    st.code(f"{M4 = }")
+    st.code(f"{isRot(R) = }")
+    st.code(f"{getRPY(R) = }")
+
+    DATA_PATH = Path(os.getcwd() + "/../data/LV_2")
+    plydata = PlyData.read(DATA_PATH / "teapotOut.ply")
+    points = plydata["vertex"]
+
+    df = pd.DataFrame()
+    df["x"] = points["x"]
+    df["y"] = points["y"]
+    df["z"] = points["z"]
+
+    st.write("Original teapot")
+    fig = px.scatter_3d(df, x="x", y="y", z="z")
+    st.plotly_chart(fig, use_container_width=True)
+
+    if st.checkbox("Use manual transformation"):
+        T = t
+        R = tr.euler.euler2mat(angles[0], angles[1], angles[2])
+    else:
+        st.write("(Using M4...)")
+    st.write("Transformed teapot")
+
+    df.iloc[:, :] += T
+    df = df.dot(R)
+
+    fig = px.scatter_3d(df, x=0, y=1, z=2)
+    st.plotly_chart(fig, use_container_width=True)

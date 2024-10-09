@@ -39,6 +39,10 @@
         };
         self = python;
       };
+      localPkgs = import ./pkgs {
+        inherit python;
+        inherit (pkgs) callPackage;
+      };
       pythonEnv = python.withPackages (
         ps: with ps; [
           matplotlib
@@ -47,6 +51,27 @@
           plotly
           plyfile
           streamlit
+          transforms3d
+          (buildPythonPackage {
+            pname = "pytransform3d";
+            version = "3.6.2";
+            src = fetchGit {
+              url = "https://github.com/dfki-ric/pytransform3d";
+              rev = "c8840d6dbac6acfe8b294d5cc1cfdde1ca1beb8f";
+            };
+            propagatedBuildInputs = [
+              pip
+              setuptools
+              numpy
+              scipy
+              matplotlib
+              lxml
+              trimesh
+              pycollada
+              pydot
+              localPkgs.open3d
+            ];
+          })
         ]
       );
       sourceZip =
@@ -82,7 +107,10 @@
           program = "${streamlitRun}/bin/streamlitRun";
         };
       };
-      packages.${system}.default = pythonEnv;
+      packages.${system} = rec {
+        inherit python pythonEnv;
+        default = pythonEnv;
+      };
 
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [

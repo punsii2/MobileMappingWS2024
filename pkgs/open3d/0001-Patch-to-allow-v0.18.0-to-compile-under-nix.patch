@@ -1,0 +1,513 @@
+From 7ceaa470a85a8271d9b2c02291703ac63338e518 Mon Sep 17 00:00:00 2001
+From: netogallo <connect@netowork.me>
+Date: Mon, 8 Jul 2024 14:59:41 +0200
+Subject: [PATCH] Patch to allow v0.18.0 to compile under nix.
+
+---
+ 3rdparty/find_dependencies.cmake              | 60 +++++++++++--------
+ 3rdparty/parallelstl/parallelstl.cmake        | 33 ++++++----
+ 3rdparty/possionrecon/possionrecon.cmake      | 42 ++++++++-----
+ 3rdparty/tinygltf/tinygltf.cmake              | 33 ++++++----
+ CMakeLists.txt                                |  2 +
+ cpp/apps/CMakeLists.txt                       |  4 +-
+ .../geometry/SurfaceReconstructionPoisson.cpp | 12 ++--
+ cpp/open3d/t/geometry/TriangleMesh.cpp        |  6 ++
+ cpp/open3d/t/geometry/TriangleMesh.h          |  3 +-
+ cpp/open3d/t/geometry/kernel/CMakeLists.txt   | 44 +++++++++-----
+ cpp/open3d/utility/Logging.h                  | 15 +++++
+ cpp/open3d/visualization/gui/ListView.cpp     |  8 +--
+ cpp/pybind/t/geometry/trianglemesh.cpp        |  3 +
+ examples/cpp/OnlineSLAMUtil.h                 |  3 +-
+ 14 files changed, 179 insertions(+), 89 deletions(-)
+
+diff --git a/3rdparty/find_dependencies.cmake b/3rdparty/find_dependencies.cmake
+index 169bfbe1a..f306d1034 100644
+--- a/3rdparty/find_dependencies.cmake
++++ b/3rdparty/find_dependencies.cmake
+@@ -853,6 +853,7 @@ if(USE_SYSTEM_CURL)
+     if(NOT 3rdparty_curl_FOUND)
+         set(USE_SYSTEM_CURL OFF)
+     endif()
++
+ endif()
+ if(NOT USE_SYSTEM_CURL)
+     if(USE_SYSTEM_OPENSSL)
+@@ -1131,7 +1132,7 @@ list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_CUSTOM Open3D::3rdparty_poisson
+ # Minizip
+ if(WITH_MINIZIP)
+     open3d_pkg_config_3rdparty_library(3rdparty_minizip
+-        SEARCH_ARGS minizip
++      SEARCH_ARGS minizip
+     )
+     list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_SYSTEM Open3D::3rdparty_minizip)
+ endif()
+@@ -1409,20 +1410,28 @@ list(APPEND Open3D_3RDPARTY_HEADER_TARGETS_FROM_SYSTEM Open3D::3rdparty_opengl)
+ 
+ # CPU Rendering
+ if(BUILD_GUI AND UNIX AND NOT APPLE)
+-    include(FetchContent)
+-    FetchContent_Declare(
+-        download_mesa_libgl
+-        PREFIX mesa
+-        URL https://github.com/isl-org/open3d_downloads/releases/download/mesa-libgl/mesa_libGL_22.1.4.tar.bz2
+-        URL_HASH SHA256=5732bfb70e8fcc747018820bc8fd31cd1867ebae5aa09baf65482b42c134d45a
+-        DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/mesa"
+-        )
+-    FetchContent_MakeAvailable(download_mesa_libgl)
+-
+-    set(MESA_CPU_GL_LIBRARY "${download_mesa_libgl_SOURCE_DIR}/libGL.so.1.2.0" "${download_mesa_libgl_SOURCE_DIR}/libEGL.so.1.0.0"
+-        "${download_mesa_libgl_SOURCE_DIR}/libgallium_dri.so" "${download_mesa_libgl_SOURCE_DIR}/kms_swrast_dri.so"
+-        "${download_mesa_libgl_SOURCE_DIR}/swrast_dri.so")
+-    message(STATUS "MESA_CPU_GL_LIBRARY: ${MESA_CPU_GL_LIBRARY}")
++    if(USE_SYSTEM_MESA)
++	open3d_pkg_config_3rdparty_library(
++	    download_mesa_libgl
++	    SEARCH_ARGS libGL=1.2.0 libEGL=1.0.0 REQUIRED
++	)
++    endif()
++    if(NOT USE_SYSTEM_MESA)
++	include(FetchContent)
++	FetchContent_Declare(
++	    download_mesa_libgl
++	    PREFIX mesa
++	    URL https://github.com/isl-org/open3d_downloads/releases/download/mesa-libgl/mesa_libGL_22.1.4.tar.bz2
++	    URL_HASH SHA256=5732bfb70e8fcc747018820bc8fd31cd1867ebae5aa09baf65482b42c134d45a
++	    DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/mesa"
++	    )
++	FetchContent_MakeAvailable(download_mesa_libgl)
++
++	set(MESA_CPU_GL_LIBRARY "${download_mesa_libgl_SOURCE_DIR}/libGL.so.1.2.0" "${download_mesa_libgl_SOURCE_DIR}/libEGL.so.1.0.0"
++	    "${download_mesa_libgl_SOURCE_DIR}/libgallium_dri.so" "${download_mesa_libgl_SOURCE_DIR}/kms_swrast_dri.so"
++	    "${download_mesa_libgl_SOURCE_DIR}/swrast_dri.so")
++	message(STATUS "MESA_CPU_GL_LIBRARY: ${MESA_CPU_GL_LIBRARY}")
++    endif()
+ endif()
+ 
+ # RPC interface
+@@ -1525,16 +1534,17 @@ endif()
+ list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_CUSTOM Open3D::3rdparty_vtk)
+ 
+ # UVAtlas
+-include(${Open3D_3RDPARTY_DIR}/uvatlas/uvatlas.cmake)
+-open3d_import_3rdparty_library(3rdparty_uvatlas
+-    HIDDEN
+-    INCLUDE_DIRS ${UVATLAS_INCLUDE_DIRS}
+-    LIB_DIR      ${UVATLAS_LIB_DIR}
+-    LIBRARIES    ${UVATLAS_LIBRARIES}
+-    DEPENDS      ext_uvatlas
+-)
+-list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_CUSTOM Open3D::3rdparty_uvatlas)
+-
++if(WITH_UV_ATLAS)
++  include(${Open3D_3RDPARTY_DIR}/uvatlas/uvatlas.cmake)
++  open3d_import_3rdparty_library(3rdparty_uvatlas
++      HIDDEN
++      INCLUDE_DIRS ${UVATLAS_INCLUDE_DIRS}
++      LIB_DIR      ${UVATLAS_LIB_DIR}
++      LIBRARIES    ${UVATLAS_LIBRARIES}
++      DEPENDS      ext_uvatlas
++  )
++  list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_CUSTOM Open3D::3rdparty_uvatlas)
++endif()
+ 
+ if(BUILD_SYCL_MODULE)
+     add_library(3rdparty_sycl INTERFACE)
+diff --git a/3rdparty/parallelstl/parallelstl.cmake b/3rdparty/parallelstl/parallelstl.cmake
+index 981b564fc..176969413 100644
+--- a/3rdparty/parallelstl/parallelstl.cmake
++++ b/3rdparty/parallelstl/parallelstl.cmake
+@@ -1,16 +1,27 @@
+ include(ExternalProject)
+ 
+-ExternalProject_Add(
+-    ext_parallelstl
+-    PREFIX parallelstl
+-    URL https://github.com/oneapi-src/oneDPL/archive/refs/tags/20190522.tar.gz
+-    URL_HASH SHA256=40d78c3405a42f781348b5bc9038cb0ce1147591e07fca7329538c9842d36a7b
+-    DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/parallelstl"
+-    UPDATE_COMMAND ""
+-    CONFIGURE_COMMAND ""
+-    BUILD_COMMAND ""
+-    INSTALL_COMMAND ""
+-)
++if(DEFINED PARALLELSTL_SRC_DIR) 
++    ExternalProject_Add(
++	ext_parallelstl
++	SOURCE_DIR "${PARALLELSTL_SRC_DIR}"
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++else()
++    ExternalProject_Add(
++	ext_parallelstl
++	PREFIX parallelstl
++	URL https://github.com/oneapi-src/oneDPL/archive/refs/tags/20190522.tar.gz
++	URL_HASH SHA256=40d78c3405a42f781348b5bc9038cb0ce1147591e07fca7329538c9842d36a7b
++	DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/parallelstl"
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++endif()
+ 
+ ExternalProject_Get_Property(ext_parallelstl SOURCE_DIR)
+ set(PARALLELSTL_INCLUDE_DIRS ${SOURCE_DIR}/include/) # "/" is critical.
+diff --git a/3rdparty/possionrecon/possionrecon.cmake b/3rdparty/possionrecon/possionrecon.cmake
+index ef5f87f94..99c495cb3 100644
+--- a/3rdparty/possionrecon/possionrecon.cmake
++++ b/3rdparty/possionrecon/possionrecon.cmake
+@@ -1,17 +1,31 @@
+ include(ExternalProject)
+ 
+-ExternalProject_Add(
+-    ext_poisson
+-    PREFIX poisson
+-    URL https://github.com/isl-org/Open3D-PoissonRecon/archive/90f3f064e275b275cff445881ecee5a7c495c9e0.tar.gz
+-    URL_HASH SHA256=1310df0c80ff0616b8fcf9b2fb568aa9b2190d0e071b0ead47dba339c146b1d3
+-    DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/poisson"
+-    SOURCE_DIR "poisson/src/ext_poisson/PoissonRecon" # Add extra directory level for POISSON_INCLUDE_DIRS.
+-    UPDATE_COMMAND ""
+-    CONFIGURE_COMMAND ""
+-    BUILD_COMMAND ""
+-    INSTALL_COMMAND ""
+-)
++if(DEFINED POISSONRECON_SRC_DIR)
++    ExternalProject_Add(
++	ext_poisson
++	SOURCE_DIR "${POISSONRECON_SRC_DIR}"
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++    ExternalProject_Get_Property(ext_poisson SOURCE_DIR)
++    set(POISSON_INCLUDE_DIRS "${SOURCE_DIR}/") # Using "/" is critical.
++else()
++    ExternalProject_Add(
++	ext_poisson
++	PREFIX poisson
++	URL https://github.com/isl-org/Open3D-PoissonRecon/archive/90f3f064e275b275cff445881ecee5a7c495c9e0.tar.gz
++	URL_HASH SHA256=1310df0c80ff0616b8fcf9b2fb568aa9b2190d0e071b0ead47dba339c146b1d3
++	DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/poisson"
++	SOURCE_DIR "poisson/src/ext_poisson/PoissonRecon" # Add extra directory level for POISSON_INCLUDE_DIRS.
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++    ExternalProject_Get_Property(ext_poisson SOURCE_DIR)
++    set(POISSON_INCLUDE_DIRS "${SOURCE_DIR}") # Not using "/" is critical.
++endif()
++
+ 
+-ExternalProject_Get_Property(ext_poisson SOURCE_DIR)
+-set(POISSON_INCLUDE_DIRS ${SOURCE_DIR}) # Not using "/" is critical.
+diff --git a/3rdparty/tinygltf/tinygltf.cmake b/3rdparty/tinygltf/tinygltf.cmake
+index aa657babd..01634c4d5 100644
+--- a/3rdparty/tinygltf/tinygltf.cmake
++++ b/3rdparty/tinygltf/tinygltf.cmake
+@@ -1,16 +1,27 @@
+ include(ExternalProject)
+ 
+-ExternalProject_Add(
+-    ext_tinygltf
+-    PREFIX tinygltf
+-    URL https://github.com/syoyo/tinygltf/archive/72f4a55edd54742bca1a71ade8ac70afca1d3f07.tar.gz
+-    URL_HASH SHA256=9e848dcf0ec7dcb352ced782aea32064a63a51b3c68ed14c68531e08632a2d90
+-    DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/tinygltf"
+-    UPDATE_COMMAND ""
+-    CONFIGURE_COMMAND ""
+-    BUILD_COMMAND ""
+-    INSTALL_COMMAND ""
+-)
++if(DEFINED TINYGLTF_SRC_DIR)
++    ExternalProject_Add(
++	ext_tinygltf
++	SOURCE_DIR "${TINYGLTF_SRC_DIR}"
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++else()
++    ExternalProject_Add(
++	ext_tinygltf
++	PREFIX tinygltf
++	URL https://github.com/syoyo/tinygltf/archive/72f4a55edd54742bca1a71ade8ac70afca1d3f07.tar.gz
++	URL_HASH SHA256=9e848dcf0ec7dcb352ced782aea32064a63a51b3c68ed14c68531e08632a2d90
++	DOWNLOAD_DIR "${OPEN3D_THIRD_PARTY_DOWNLOAD_DIR}/tinygltf"
++	UPDATE_COMMAND ""
++	CONFIGURE_COMMAND ""
++	BUILD_COMMAND ""
++	INSTALL_COMMAND ""
++    )
++endif()
+ 
+ ExternalProject_Get_Property(ext_tinygltf SOURCE_DIR)
+ set(TINYGLTF_INCLUDE_DIRS ${SOURCE_DIR}/) # "/" is critical.
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a87d542b5..9b8ca60ce 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -103,6 +103,7 @@ option(USE_SYSTEM_IMGUI           "Use system pre-installed imgui"           OFF
+ option(USE_SYSTEM_JPEG            "Use system pre-installed jpeg"            OFF)
+ option(USE_SYSTEM_JSONCPP         "Use system pre-installed jsoncpp"         OFF)
+ option(USE_SYSTEM_LIBLZF          "Use system pre-installed liblzf"          OFF)
++option(USE_SYSTEM_MESA            "Use system pre-installed mesa"            OFF)
+ option(USE_SYSTEM_MSGPACK         "Use system pre-installed msgpack"         OFF)
+ option(USE_SYSTEM_NANOFLANN       "Use system pre-installed nanoflann"       OFF)
+ option(USE_SYSTEM_OPENSSL         "Use system pre-installed OpenSSL"         OFF)
+@@ -122,6 +123,7 @@ else()
+     option(BUILD_VTK_FROM_SOURCE      "Build VTK from source"                OFF)
+     option(BUILD_FILAMENT_FROM_SOURCE "Build filament from source"           OFF)
+ endif()
++option(WITH_UV_ATLAS         "Support the UVAtlas functions on TriangleMesh (requires uvatlas and DirectX)" ON)
+ 
+ option(PREFER_OSX_HOMEBREW        "Prefer Homebrew libs over frameworks"     ON )
+ option(WITH_MINIZIP               "Enable MiniZIP"                           OFF)
+diff --git a/cpp/apps/CMakeLists.txt b/cpp/apps/CMakeLists.txt
+index 8b718c996..8d5bc9444 100644
+--- a/cpp/apps/CMakeLists.txt
++++ b/cpp/apps/CMakeLists.txt
+@@ -54,7 +54,9 @@ macro(open3d_add_app_gui SRC_DIR APP_NAME TARGET_NAME)
+             install(DIRECTORY   "${APP_DIR}"
+                     DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+                     USE_SOURCE_PERMISSIONS)
+-            if (CMAKE_INSTALL_PREFIX MATCHES "^(/usr/local|/opt)")
++	    if (DEFINED OVERRIDE_DESKTOP_INSTALL_DIR)
++	      set(DESKTOP_INSTALL_DIR "${OVERRIDE_DESKTOP_INSTALL_DIR}")
++	    elseif (CMAKE_INSTALL_PREFIX MATCHES "^(/usr/local|/opt)")
+                 set(DESKTOP_INSTALL_DIR "/usr/share")
+             else()
+                 set(DESKTOP_INSTALL_DIR "$ENV{HOME}/.local/share")
+diff --git a/cpp/open3d/geometry/SurfaceReconstructionPoisson.cpp b/cpp/open3d/geometry/SurfaceReconstructionPoisson.cpp
+index 08da79d93..b7d33f094 100644
+--- a/cpp/open3d/geometry/SurfaceReconstructionPoisson.cpp
++++ b/cpp/open3d/geometry/SurfaceReconstructionPoisson.cpp
+@@ -26,12 +26,12 @@
+ // 4245: signed/unsigned mismatch
+ // 4189: local variable is initialized but not referenced
+ #endif
+-#include "PoissonRecon/Src/PreProcessor.h"
+-#include "PoissonRecon/Src/MyMiscellany.h"
+-#include "PoissonRecon/Src/CmdLineParser.h"
+-#include "PoissonRecon/Src/FEMTree.h"
+-#include "PoissonRecon/Src/PPolynomial.h"
+-#include "PoissonRecon/Src/PointStreamData.h"
++#include "Src/PreProcessor.h"
++#include "Src/MyMiscellany.h"
++#include "Src/CmdLineParser.h"
++#include "Src/FEMTree.h"
++#include "Src/PPolynomial.h"
++#include "Src/PointStreamData.h"
+ #ifdef _MSC_VER
+ #pragma warning(pop)
+ #endif
+diff --git a/cpp/open3d/t/geometry/TriangleMesh.cpp b/cpp/open3d/t/geometry/TriangleMesh.cpp
+index 6f33f8e44..22f730af9 100644
+--- a/cpp/open3d/t/geometry/TriangleMesh.cpp
++++ b/cpp/open3d/t/geometry/TriangleMesh.cpp
+@@ -32,7 +32,10 @@
+ #include "open3d/t/geometry/kernel/PointCloud.h"
+ #include "open3d/t/geometry/kernel/Transform.h"
+ #include "open3d/t/geometry/kernel/TriangleMesh.h"
++
++#ifdef WITH_UV_ATLAS
+ #include "open3d/t/geometry/kernel/UVUnwrapping.h"
++#endif
+ #include "open3d/utility/ParallelScan.h"
+ 
+ namespace open3d {
+@@ -703,6 +706,8 @@ TriangleMesh TriangleMesh::FillHoles(double hole_size) const {
+     return CreateTriangleMeshFromVtkPolyData(result);
+ }
+ 
++#ifdef WITH_UV_ATLAS
++
+ std::tuple<float, int, int> TriangleMesh::ComputeUVAtlas(
+         size_t size,
+         float gutter,
+@@ -713,6 +718,7 @@ std::tuple<float, int, int> TriangleMesh::ComputeUVAtlas(
+                                                 max_stretch,
+                                                 parallel_partitions, nthreads);
+ }
++#endif
+ 
+ namespace {
+ /// Bakes vertex or triangle attributes to a texure.
+diff --git a/cpp/open3d/t/geometry/TriangleMesh.h b/cpp/open3d/t/geometry/TriangleMesh.h
+index 7824f193b..63ad4e13b 100644
+--- a/cpp/open3d/t/geometry/TriangleMesh.h
++++ b/cpp/open3d/t/geometry/TriangleMesh.h
+@@ -829,12 +829,13 @@ public:
+     /// \return Tuple with (max stretch, num_charts, num_partitions) storing the
+     /// actual amount of stretch, the number of created charts, and the number
+     /// of parallel partitions created.
++#ifdef WITH_UV_ATLAS
+     std::tuple<float, int, int> ComputeUVAtlas(size_t size = 512,
+                                                float gutter = 1.0f,
+                                                float max_stretch = 1.f / 6,
+                                                int parallel_partitions = 1,
+                                                int nthreads = 0);
+-
++#endif
+     /// Bake vertex attributes into textures.
+     ///
+     /// This function assumes a triangle attribute with name 'texture_uvs'.
+diff --git a/cpp/open3d/t/geometry/kernel/CMakeLists.txt b/cpp/open3d/t/geometry/kernel/CMakeLists.txt
+index 081d24a6b..582d5136c 100644
+--- a/cpp/open3d/t/geometry/kernel/CMakeLists.txt
++++ b/cpp/open3d/t/geometry/kernel/CMakeLists.txt
+@@ -1,19 +1,35 @@
+ open3d_ispc_add_library(tgeometry_kernel OBJECT)
+ 
+-target_sources(tgeometry_kernel PRIVATE
+-    Image.cpp
+-    ImageCPU.cpp
+-    PCAPartition.cpp
+-    PointCloud.cpp
+-    PointCloudCPU.cpp
+-    TriangleMesh.cpp
+-    TriangleMeshCPU.cpp
+-    Transform.cpp
+-    TransformCPU.cpp
+-    UVUnwrapping.cpp
+-    VoxelBlockGrid.cpp
+-    VoxelBlockGridCPU.cpp
+-)
++if (WITH_UV_ATLAS)
++  target_sources(tgeometry_kernel PRIVATE
++      Image.cpp
++      ImageCPU.cpp
++      PCAPartition.cpp
++      PointCloud.cpp
++      PointCloudCPU.cpp
++      TriangleMesh.cpp
++      TriangleMeshCPU.cpp
++      Transform.cpp
++      TransformCPU.cpp
++      UVUnwrapping.cpp
++      VoxelBlockGrid.cpp
++      VoxelBlockGridCPU.cpp
++  )
++else()
++  target_sources(tgeometry_kernel PRIVATE
++      Image.cpp
++      ImageCPU.cpp
++      PCAPartition.cpp
++      PointCloud.cpp
++      PointCloudCPU.cpp
++      TriangleMesh.cpp
++      TriangleMeshCPU.cpp
++      Transform.cpp
++      TransformCPU.cpp
++      VoxelBlockGrid.cpp
++      VoxelBlockGridCPU.cpp
++  )
++endif()
+ 
+ if (BUILD_CUDA_MODULE)
+     target_sources(tgeometry_kernel PRIVATE
+diff --git a/cpp/open3d/utility/Logging.h b/cpp/open3d/utility/Logging.h
+index 15fe28fa5..8f038976e 100644
+--- a/cpp/open3d/utility/Logging.h
++++ b/cpp/open3d/utility/Logging.h
+@@ -22,6 +22,8 @@
+ #include <fmt/printf.h>
+ #include <fmt/ranges.h>
+ 
++#include <type_traits>
++
+ #define DEFAULT_IO_BUFFER_SIZE 1024
+ 
+ #include "open3d/Macro.h"
+@@ -259,3 +261,16 @@ private:
+ 
+ }  // namespace utility
+ }  // namespace open3d
++
++// Version v10 of fmt library does not have a formatter for enums.
++// See: https://github.com/fmtlib/fmt/issues/3720
++template <typename EnumType>
++struct fmt::formatter<EnumType, std::enable_if_t<std::is_enum<EnumType>::value, char>> : fmt::formatter<int>
++{
++    auto format(const EnumType& enumValue, format_context& ctx) const
++    {
++        return fmt::formatter<int>::format(
++            static_cast<int>(enumValue), ctx);
++    }
++};
++
+diff --git a/cpp/open3d/visualization/gui/ListView.cpp b/cpp/open3d/visualization/gui/ListView.cpp
+index 4d77f0bd1..582cfbb90 100644
+--- a/cpp/open3d/visualization/gui/ListView.cpp
++++ b/cpp/open3d/visualization/gui/ListView.cpp
+@@ -116,15 +116,13 @@ Widget::DrawResult ListView::Draw(const DrawContext &context) {
+     ImGui::PushStyleColor(ImGuiCol_HeaderActive,  // click-hold color
+                           colorToImgui(context.theme.list_selected_color));
+ 
+-    int height_in_items =
+-            int(std::floor(frame.height / ImGui::GetFrameHeight()));
+ 
+     auto result = Widget::DrawResult::NONE;
+     auto new_selected_idx = impl_->selected_index_;
+     bool is_double_click = false;
+     DrawImGuiPushEnabledState();
+-    if (ImGui::ListBoxHeader(impl_->imgui_id_.c_str(),
+-                             int(impl_->items_.size()), height_in_items)) {
++    ImVec2 initial_size(0, ImGui::GetFrameHeight());
++    if (ImGui::BeginListBox(impl_->imgui_id_.c_str(), initial_size)) {
+         for (size_t i = 0; i < impl_->items_.size(); ++i) {
+             bool is_selected = (int(i) == impl_->selected_index_);
+             // ImGUI's list wants to hover over items, which is not done by
+@@ -155,7 +153,7 @@ Widget::DrawResult ListView::Draw(const DrawContext &context) {
+             }
+             ImGui::PopStyleColor();
+         }
+-        ImGui::ListBoxFooter();
++        ImGui::EndListBox();
+ 
+         if (new_selected_idx != impl_->selected_index_ || is_double_click) {
+             impl_->selected_index_ = new_selected_idx;
+diff --git a/cpp/pybind/t/geometry/trianglemesh.cpp b/cpp/pybind/t/geometry/trianglemesh.cpp
+index 6285b00c6..14aaaa52d 100644
+--- a/cpp/pybind/t/geometry/trianglemesh.cpp
++++ b/cpp/pybind/t/geometry/trianglemesh.cpp
+@@ -674,6 +674,8 @@ Example:
+         o3d.visualization.draw([{'name': 'filled', 'geometry': ans}])
+ )");
+ 
++#ifdef WITH_UV_ATLAS
++
+     triangle_mesh.def(
+             "compute_uvatlas", &TriangleMesh::ComputeUVAtlas, "size"_a = 512,
+             "gutter"_a = 1.f, "max_stretch"_a = 1.f / 6,
+@@ -724,6 +726,7 @@ Example:
+         mesh.material.texture_maps['albedo'] = o3d.t.io.read_image(texture_data.albedo_texture_path)
+         o3d.visualization.draw(mesh)
+ )");
++#endif
+ 
+     triangle_mesh.def("bake_vertex_attr_textures",
+                       &TriangleMesh::BakeVertexAttrTextures, "size"_a,
+diff --git a/examples/cpp/OnlineSLAMUtil.h b/examples/cpp/OnlineSLAMUtil.h
+index 585f18a8f..5acec40b2 100644
+--- a/examples/cpp/OnlineSLAMUtil.h
++++ b/examples/cpp/OnlineSLAMUtil.h
+@@ -619,8 +619,9 @@ protected:
+                         surface_.pcd.HasPointPositions()
+                                 ? surface_.pcd.GetPointPositions().GetLength()
+                                 : 0;
++		int estimated_points = prop_values_.estimated_points;
+                 info << fmt::format("Surface points: {}/{}\n", len,
+-                                    prop_values_.estimated_points)
++                                    estimated_points)
+                      << "\n";
+             }
+ 
+-- 
+2.44.1
+

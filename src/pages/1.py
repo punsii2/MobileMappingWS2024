@@ -13,7 +13,7 @@ from plyfile import PlyData
 EXERCISE = 1
 TASKS = 5
 TITLE = f"Exercise {EXERCISE}"
-st.set_page_config(page_title=TITLE, page_icon="-")
+st.set_page_config(page_title=TITLE, page_icon="🗺️")
 st.sidebar.header(TITLE)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))

@@ -10,12 +10,18 @@ import plotly.express as px
 import streamlit as st
 from plyfile import PlyData
 
-st.set_page_config(page_title="Exercise 1", page_icon="-")
-st.sidebar.header("Exercise 1")
-tabs = st.tabs(["1", "2", "3", "4", "5"])
+EXERCISE = 1
+TASKS = 5
+TITLE = f"Exercise {EXERCISE}"
+st.set_page_config(page_title=TITLE, page_icon="-")
+st.sidebar.header(TITLE)
 
-with tabs[0]:
-    st.write("## 7.1.1.1")
+tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
+task = 0
+
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
     DATA_PATH = Path(os.getcwd() + "/../data/LV_1/")
     KARLSTR_PATH = DATA_PATH / "HM_Karlstr.jpg"
 
@@ -25,8 +31,9 @@ with tabs[0]:
 
     st.write(f"{image.shape=}" + " (rows, columns, channels)")
 
-with tabs[1]:
-    st.write("## 7.1.1.2")
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     st.image(image_gray)
 
@@ -51,8 +58,9 @@ with tabs[1]:
     """
     )
 
-with tabs[2]:
-    st.write("## 7.1.1.3")
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
     scale = 0.1
     image_small = cv2.resize(image, (0, 0), fx=scale, fy=scale)
     st.image(image_small)
@@ -99,8 +107,9 @@ with tabs[2]:
     st.image(apply_black_mask(image_gray, width))
 
 
-with tabs[3]:
-    st.write("## 7.1.1.4")
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
     st.button("Rerun animation")
 
     # images in grid
@@ -130,8 +139,9 @@ with tabs[3]:
 
     st.video(video)
 
-with tabs[4]:
-    st.write("## 7.1.1.5")
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
 
     plydata = PlyData.read(DATA_PATH / "../LV_2/teapotOut.ply")
     points = plydata["vertex"]

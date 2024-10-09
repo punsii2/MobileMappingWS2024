@@ -128,7 +128,7 @@ with tabs[task - 1]:
     width = images[0].shape[1]
     video_path = DATA_PATH / "output/video.mp4"
     writer = cv2.VideoWriter(
-        str(video_path), cv2.VideoWriter_fourcc(*"H264"), 1, (width, height)
+        str(video_path), cv2.VideoWriter_fourcc(*"avc1"), 1, (width, height)
     )
     for image in images:
         writer.write(image)

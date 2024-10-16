@@ -52,6 +52,7 @@
           plyfile
           streamlit
           transforms3d
+          localPkgs.streamlitBackCameraInput
           (buildPythonPackage {
             pname = "pytransform3d";
             version = "3.6.2";

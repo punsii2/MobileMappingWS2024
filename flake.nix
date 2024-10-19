@@ -33,7 +33,7 @@
         packageOverrides = self: super: {
           opencv4 = super.opencv4.override {
             inherit (pkgs) gtk2;
-            # enableGtk2 = true;
+            enableGtk2 = true;
             # enableFfmpeg = true;
           };
         };

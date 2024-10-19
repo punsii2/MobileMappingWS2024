@@ -33,13 +33,17 @@ task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
+    SQUARE_SIZE_MM = 40
     # termination criteria
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
     pattern_size = (9, 6)
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     objp = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
-    objp[:, :2] = np.mgrid[0 : pattern_size[1], 0 : pattern_size[0]].T.reshape(-1, 2)
+    objp[:, :2] = (
+        np.mgrid[0 : pattern_size[1], 0 : pattern_size[0]].T.reshape(-1, 2)
+        * SQUARE_SIZE_MM
+    )
 
     # Arrays to store object points and image points from all the images.
     objpoints = []  # 3d point in real world space

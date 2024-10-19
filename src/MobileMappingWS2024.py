@@ -23,11 +23,3 @@ with open(environ["SOURCE_ZIP_PATH"], "rb") as f:
     st.download_button(
         "Download source code as zip", f, file_name="MobileMappingWs24Menhart.zip"
     )
-
-
-#
-# picture = st.camera_input("Take a picture")
-#
-# if picture:
-#     image = cv2.cvtColor(cv2.imread(str(KARLSTR_PATH)), cv2.COLOR_RGB2BGR)
-#     st.image(picture)

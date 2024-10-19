@@ -7,7 +7,7 @@ import numpy as np
 import streamlit as st
 
 EXERCISE = 3
-TASKS = 4
+TASKS = 3
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
@@ -117,8 +117,40 @@ with tabs[task - 1]:
         st.write("distortion_coefficients:")
         st.write(distortion_coefficients)
 
-    # st.divider()
-    # st.write("Undistortion:")
-    # img = cv.imread("left12.jpg")
-    # h, w = img.shape[:2]
-    # newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+task += 1
+with tabs[task - 1]:
+    st.write(
+        "At this point I do not have access to Matlab or the required images that are part of the Vision Toolbox."
+    )
+
+task += 1
+with tabs[task - 1]:
+    st.header("Undistortion")
+    h, w = images[0].shape[:2]
+    newcameramtx, roi = cv.getOptimalNewCameraMatrix(
+        camera_matrix, distortion_coefficients, (w, h), 1, (w, h)
+    )
+
+    distortions = [st.columns(2)]
+    distortions[0][0].write("Original Images")
+    distortions[0][1].write("Undistorted Images")
+    for idx, image in enumerate(images):
+        # undistort
+        undistorted = cv.undistort(
+            image, camera_matrix, distortion_coefficients, None, newcameramtx
+        )
+
+        # # crop the image
+        # x, y, w, h = roi
+        # undistorted = undistorted[y : y + h, x : x + w]
+        distortions.append(st.columns(2))
+        distortions[idx + 1][0].image(image)
+        distortions[idx + 1][1].image(undistorted)
+    st.text(
+        """
+        The original (distorted) and undistorted images differ more than i anticipated.
+        The distortion parameters are all very close to 0, which is to be expected
+        as the phone camera that was used to take the pictures should already be calibrated.
+        However, the distorted images still show quite a large black arc along the top and bottom.
+    """
+    )

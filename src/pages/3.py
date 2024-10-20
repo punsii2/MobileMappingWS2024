@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from typing import List
 
@@ -11,16 +12,12 @@ TASKS = 3
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
-
-tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
 task = 0
 
 
 @st.cache_data()
 def read_images(image_paths: List[Path]):
-    images = [cv.imread(str(path), cv.COLOR_RGB2BGR) for path in image_paths]
-    h, w, _ = images[0].shape
-    return [cv.resize(image, (int(w / 2), int(h / 2))) for image in images]
+    return [cv.imread(str(path), cv.COLOR_RGB2BGR) for path in image_paths]
 
 
 @st.cache_data()
@@ -28,6 +25,33 @@ def find_pattern(image, pattern_size):
     processed_image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
     return cv.findChessboardCornersSB(processed_image, pattern_size)
 
+
+def load_images(upload=False):
+    images = []
+    if upload:
+        uploaded_files = st.file_uploader(
+            "Choose image files", type=["png", "jpg"], accept_multiple_files=True
+        )
+        if uploaded_files:
+            for f in uploaded_files:
+                image_bytes = np.asarray(bytearray(f.read()), dtype="uint8")
+                images.append(cv.imdecode(image_bytes, cv.COLOR_RGB2GRAY))
+    else:
+        image_paths = list(Path(os.getcwd() + "/../data/LV_3/").glob("*"))
+        images = read_images(image_paths)
+    if images:
+        h, w, _ = images[0].shape
+        return [cv.resize(image, (int(w), int(h))) for image in images]
+    return
+
+
+upload = st.sidebar.checkbox("Upload your own images.")
+images = load_images(upload)
+if not images:
+    sys.exit()
+num_images = len(images)
+
+tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
 
 task += 1
 with tabs[task - 1]:
@@ -48,10 +72,6 @@ with tabs[task - 1]:
     # Arrays to store object points and image points from all the images.
     objpoints = []  # 3d point in real world space
     imgpoints = []  # 2d points in image plane.
-
-    image_paths = list(Path(os.getcwd() + "/../data/LV_3/").glob("*"))
-    images = read_images(image_paths)
-    num_images = len(images)
 
     # st.header("Calibration Images:")
     # columns = st.columns(5)
@@ -91,6 +111,14 @@ with tabs[task - 1]:
             )
     progress.empty()
     st.write(f"Done! Found a pattern in {successes} out of {num_images} images.")
+    if not successes:
+        st.text(
+            """
+            None of the images can be used for calibration :(
+            Please use different images.
+        """
+        )
+        sys.exit()
     st.divider()
 
     (

@@ -146,11 +146,26 @@ with tabs[task - 1]:
         distortions.append(st.columns(2))
         distortions[idx + 1][0].image(image)
         distortions[idx + 1][1].image(undistorted)
+
+    mean_error = 0
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv.projectPoints(
+            objpoints[i],
+            rotation_vectors[i],
+            translation_vectors[i],
+            camera_matrix,
+            distortion_coefficients,
+        )
+        error = cv.norm(imgpoints[i], imgpoints2, cv.NORM_L2) / len(imgpoints2)
+        mean_error += error
+
+    st.write(f"Total reprojection error: {format(mean_error / len(objpoints))}")
+
     st.text(
         """
         The original (distorted) and undistorted images differ more than i anticipated.
         The distortion parameters are all very close to 0, which is to be expected
         as the phone camera that was used to take the pictures should already be calibrated.
-        However, the distorted images still show quite a large black arc along the top and bottom.
+        However, the undistorted images still show quite a large black arc along the top and bottom.
     """
     )

@@ -109,7 +109,7 @@
         };
       };
       packages.${system} = rec {
-        inherit python pythonEnv;
+        inherit python pythonEnv sourceZip;
         default = pythonEnv;
       };
 

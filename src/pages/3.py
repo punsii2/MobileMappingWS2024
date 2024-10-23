@@ -37,7 +37,8 @@ def load_images(upload=False):
                 image_bytes = np.asarray(bytearray(f.read()), dtype="uint8")
                 images.append(cv.imdecode(image_bytes, cv.COLOR_RGB2GRAY))
     else:
-        image_paths = list(Path(os.getcwd() + "/../data/LV_3/").glob("*"))
+        image_paths = list(Path(os.getcwd() + "/../data/LV_3/").glob("*.png"))
+        image_paths += list(Path(os.getcwd() + "/../data/LV_3/").glob("*.jpg"))
         images = read_images(image_paths)
     if images:
         h, w, _ = images[0].shape

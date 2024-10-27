@@ -10,9 +10,6 @@ import numpy as np
 import plotly.graph_objects as go
 
 # more genral calculation of camera vertices
-# def to_homogeneous(points):
-#     pad = np.ones((points.shape[:-1] + (1,)), dtype=points.dtype)
-#     return np.concatenate([points, pad], axis=-1)
 # def camera_corners_base():
 #     scale = 1
 #     SENSOR_WIDTH = 0.036
@@ -38,15 +35,20 @@ SH = 0.24  # sensor height
 BASE_CAMERA_CORNERS = (
     np.array(
         [
-            [1.0, -SW, -SH],
-            [1.0, SW, -SH],
-            [1.0, SW, SH],
-            [1.0, -SW, SH],
-            [1.0, -SW, -SH],
+            [-SW, -SH, 1.0],
+            [SW, -SH, 1.0],
+            [SW, SH, 1.0],
+            [-SW, SH, 1.0],
+            [-SW, -SH, 1.0],
         ]
     )
     * SCALE
 )
+
+
+def to_homogeneous(points):
+    pad = np.ones((points.shape[:-1] + (1,)), dtype=points.dtype)
+    return np.concatenate([points, pad], axis=-1)
 
 
 def init_figure(size: int = 1000) -> go.Figure:
@@ -127,8 +129,8 @@ def plot_3d_bbox(
 def plot_points(
     fig: go.Figure,
     pts: np.ndarray,  # size (n, 3)
-    color: str = "rgba(255, 0, 0, 1)",
-    ps: int = 1,
+    color: str = "black",
+    ps: int = 4,
     colorscale: Optional[str] = None,
     name: Optional[str] = None,
 ):
@@ -151,16 +153,12 @@ def plot_camera(
     W: np.ndarray,  # W, from camera to world, size (4,4)
     color: str = "black",
     name: Optional[str] = None,
-    legendgroup: Optional[str] = None,
 ):
     """Plot a camera frustum from pose and intrinsic matrix."""
-    if not legendgroup:
-        legendgroup = name
 
     R = W[0:3, 0:3]
     t = W[0:3, 3]
     corners = BASE_CAMERA_CORNERS @ R.T + t
-    print(f"{BASE_CAMERA_CORNERS=}")
 
     x, y, z = np.concatenate(([t], corners)).T
     i = [0, 0, 0, 0]
@@ -177,7 +175,7 @@ def plot_camera(
         y=y,
         z=z,
         mode="lines",
-        legendgroup=legendgroup,
+        legendgroup=name,
         name="Camera",
         line=dict(color=color, width=5),
         showlegend=False,
@@ -186,18 +184,23 @@ def plot_camera(
     fig.add_trace(pyramid)
 
 
-def plot_world_coordinates(fig: go.Figure):
+def plot_world_coordinates(
+    fig: go.Figure,
+    xrange=(0, 10),
+    yrange=(0, 10),
+    zrange=(0, 10),
+):
     # Add the x-axis
     fig.add_trace(
-        go.Scatter3d(x=[0, 10], y=[0, 0], z=[0, 0], mode="lines", name="x-axis")
+        go.Scatter3d(x=xrange, y=[0, 0], z=[0, 0], mode="lines", name="x-axis")
     )
 
     # Add the y-axis
     fig.add_trace(
-        go.Scatter3d(x=[0, 0], y=[0, 10], z=[0, 0], mode="lines", name="y-axis")
+        go.Scatter3d(x=[0, 0], y=yrange, z=[0, 0], mode="lines", name="y-axis")
     )
 
     # Add the z-axis
     fig.add_trace(
-        go.Scatter3d(x=[0, 0], y=[0, 0], z=[0, 10], mode="lines", name="z-axis")
+        go.Scatter3d(x=[0, 0], y=[0, 0], z=zrange, mode="lines", name="z-axis")
     )

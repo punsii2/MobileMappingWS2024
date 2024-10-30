@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from time import sleep
 
-import cv2
+import cv as cv
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -26,7 +26,7 @@ with tabs[task - 1]:
     KARLSTR_PATH = DATA_PATH / "HM_Karlstr.jpg"
 
     # read an image from disk
-    image = cv2.cvtColor(cv2.imread(str(KARLSTR_PATH)), cv2.COLOR_RGB2BGR)
+    image = cv.cvtColor(cv.imread(str(KARLSTR_PATH)), cv.COLOR_RGB2BGR)
     st.image(image)
 
     st.write(f"{image.shape=}" + " (rows, columns, channels)")
@@ -34,18 +34,18 @@ with tabs[task - 1]:
 task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     st.image(image_gray)
 
     historgram_gray = plt.figure()
-    histogram = cv2.calcHist(image_gray, [0], None, [256], [0, 256])
+    histogram = cv.calcHist(image_gray, [0], None, [256], [0, 256])
     plt.hist(image_gray.ravel(), bins=256)
     st.write("Histogramm of grayscale image:")
     st.pyplot(historgram_gray)
 
     historgram_bgr = plt.figure()
     for i, col in enumerate(["b", "g", "r"]):
-        histr = cv2.calcHist([image], [i], None, [256], [0, 256])
+        histr = cv.calcHist([image], [i], None, [256], [0, 256])
         plt.plot(histr, color=col)
         plt.xlim([0, 256])
     st.write("Histogramm of colored image:")
@@ -62,7 +62,7 @@ task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     scale = 0.1
-    image_small = cv2.resize(image, (0, 0), fx=scale, fy=scale)
+    image_small = cv.resize(image, (0, 0), fx=scale, fy=scale)
     st.image(image_small)
 
     @st.cache_data
@@ -116,19 +116,19 @@ with tabs[task - 1]:
     images = []
     columns = st.columns(3)
     for i in range(1, 10):
-        image = cv2.imread(str(DATA_PATH / f"000{i}.png"))
+        image = cv.imread(str(DATA_PATH / f"000{i}.png"))
         images.append(image)
 
         columns[(i - 1) % 3].image(image)
-        cv2.imwrite(str(DATA_PATH / f"output/000{i}.png"), image)
+        cv.imwrite(str(DATA_PATH / f"output/000{i}.png"), image)
         sleep(1)
 
     # video
     height = images[0].shape[0]
     width = images[0].shape[1]
     video_path = DATA_PATH / "output/video.mp4"
-    writer = cv2.VideoWriter(
-        str(video_path), cv2.VideoWriter_fourcc(*"avc1"), 1, (width, height)
+    writer = cv.VideoWriter(
+        str(video_path), cv.VideoWriter_fourcc(*"avc1"), 1, (width, height)
     )
     for image in images:
         writer.write(image)

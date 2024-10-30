@@ -29,7 +29,7 @@ import plotly.graph_objects as go
 #     return to_homogeneous(corners) @ np.linalg.inv(CAMERA_INTRINSICS).T * scale
 
 # In our case however, hardcoding will do the trick
-SCALE = 2
+SCALE = 1
 SW = 0.36  # sensor width
 SH = 0.24  # sensor height
 BASE_CAMERA_CORNERS = (

@@ -7,7 +7,7 @@ from numpy.linalg import inv
 from utils.plot import init_figure, plot_camera, plot_points, plot_world_coordinates
 
 EXERCISE = 4
-TASKS = 5
+TASKS = 4
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
@@ -60,8 +60,9 @@ f2.latex(r" y_u = \frac{Y_c}{Z_c}")
 f3.text("Slide 33, Formula (69)")
 b1 = np.array(list(map(lambda p: [p[0] / p[2], p[1] / p[2], 1], p1)))
 b2 = np.array(list(map(lambda p: [p[0] / p[2], p[1] / p[2], 1], p2)))
-# plot_points(fig, b1, "red")
-# plot_points(fig, b2, "blue")
+
+# plot_points(fig1, b1 @ R1.T + T1, "red")
+# plot_points(fig1, b2 @ R2.T + T2, "blue")
 
 FOCAL_LENGTH = 0.002
 CAMERA_DIST = 1
@@ -79,14 +80,14 @@ yr = np.multiply(zr, b1[:, 1])
 fig2 = go.Figure(fig1)
 points_reconstructed = np.stack((xr, yr, zr), axis=1)
 # We still need to go back to world coordinates
-points_reconstructed = points_reconstructed @ R1 + T1
+points_reconstructed = points_reconstructed @ R1.T + T1
 plot_points(fig2, points_reconstructed, "purple", name="reconstructed points")
 st.plotly_chart(fig2)
 st.write("The reconstucted purple points perfectly cover the original green points.")
 
 fig3 = go.Figure(fig1)
-noisy1 = b1 + np.random.rand(80, 3) * 0.1
-noisy2 = b2 + np.random.rand(80, 3) * 0.1
+noisy1 = b1 + (np.random.rand(80, 3) - 0.5) * 0.1
+noisy2 = b2 + (np.random.rand(80, 3) - 0.5) * 0.1
 noisy_z = np.array(
     [FOCAL_LENGTH * CAMERA_DIST / (noisy1[i][0] - noisy2[i][0]) for i in range(80)]
 )
@@ -95,7 +96,7 @@ noisy_x = np.multiply(noisy_z, noisy1[:, 0])
 noisy_y = np.multiply(noisy_z, noisy1[:, 1])
 noisy_reconstructed = np.stack((noisy_x, noisy_y, noisy_z), axis=1)
 # We still need to go back to world coordinates
-noisy_reconstructed = noisy_reconstructed @ R1 + T1
+noisy_reconstructed = noisy_reconstructed @ R1.T + T1
 plot_points(fig3, noisy_reconstructed, "red", name="reconstructed noisy points")
 
 

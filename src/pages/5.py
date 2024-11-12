@@ -1,5 +1,8 @@
+import os
 from math import pi
+from pathlib import Path
 
+import cv2 as cv
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
@@ -16,13 +19,104 @@ from utils.plot import (
 )
 
 EXERCISE = 5
-TASKS = 3
+TASKS = 2
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
 task = 0
 
-tabs = st.tabs(list(map(lambda x: str(x), range(0, TASKS + 1))))
+tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
+
+
+task += 1
+with tabs[task - 1]:
+    st.write(f"## 7.1.{EXERCISE}.{task}")
+
+    DATA_PATH = Path(os.getcwd() + "/../data/LV_5/")
+    LEFT_PATH = DATA_PATH / "scene_l.jpg"
+    RIGHT_PATH = DATA_PATH / "scene_r.jpg"
+
+    # read an image from disk
+    image_left = cv.cvtColor(cv.imread(str(LEFT_PATH)), cv.COLOR_BGR2GRAY)
+    image_right = cv.cvtColor(cv.imread(str(RIGHT_PATH)), cv.COLOR_BGR2GRAY)
+    cl, cr = st.columns(2)
+    cl.image(image_left)
+    cr.image(image_right)
+
+    anaglyph = np.stack([image_left, image_right, image_right], axis=2)
+
+    # Initialize the stereo block matching object
+    stereo = cv.StereoBM_create(numDisparities=16, blockSize=31)
+    # Compute the disparity image
+    disparity = stereo.compute(image_left, image_right)
+    dl, dr = st.columns(2)
+    dl.image(anaglyph)
+    dr.image(disparity.astype(np.uint8))
+
+    st.write("Histogram of disparity map:")
+    hist = go.Figure()
+    hist.add_trace(
+        go.Histogram(
+            x=disparity.ravel(),
+            opacity=0.5,
+            # marker_color=color,
+            # name="%s channel" % color,
+        )
+    )
+    st.plotly_chart(hist)
+
+    disparity = disparity.ravel()
+    filter_mask = (disparity > 64) & (disparity < 240)
+    disparity = disparity[filter_mask]
+    st.write("Histogram of disparity map (clipped in the roi between 64 and 239):")
+    hist2 = go.Figure()
+    hist2.add_trace(
+        go.Histogram(
+            x=disparity,
+            opacity=0.5,
+            # marker_color=color,
+            # name="%s channel" % color,
+        )
+    )
+    st.plotly_chart(hist2)
+
+    st.divider()
+    FOCAL_LENGTH = 0.08 * 2000
+    CAMERA_DIST = 0.4 * 2000
+
+    image_points = []
+    for x in range(image_left.shape[0]):
+        for y in range(image_left.shape[1]):
+            image_points.append((x, y, image_left[x][y]))
+
+    image_points = np.array(image_points)[filter_mask]
+
+    zr = np.array(FOCAL_LENGTH * CAMERA_DIST / -disparity)
+    xr = np.multiply(zr, image_points[:, 0] / FOCAL_LENGTH)
+    yr = np.multiply(zr, image_points[:, 1] / FOCAL_LENGTH)
+
+    point_cloud = init_figure()
+    points_reconstructed = np.stack((xr.ravel(), yr.ravel(), zr.ravel()), axis=1)
+    # In theory we still need to go back to world coordinates
+    # points_reconstructed = points_reconstructed @ R1.T + T1
+    point_cloud.add_trace(
+        go.Scatter3d(
+            x=xr,
+            y=yr,
+            z=zr,
+            mode="markers",
+            name="test",
+            legendgroup="test",
+            marker=dict(
+                size=3,
+                color=image_left.ravel()[filter_mask],
+                line_width=0.0,
+                colorscale="gray",
+            ),
+        )
+    )
+    st.plotly_chart(point_cloud)
+
 
 task += 1
 with tabs[task - 1]:
@@ -88,11 +182,11 @@ with tabs[task - 1]:
     n = xy.shape[0]
     RP = tr.euler.euler2mat(0, 0, -0.25 * pi)
     p0 = np.c_[xy, np.zeros(n)]
-    use_disparity_as_z = True
     if st.checkbox("Plot base plane"):
+        use_disparity_as_z = True
         plot_points(fig1, p0, "green", name="grid samples")
     else:
-        use_disparity_as_z = st.checkbox("Elevate result by disparity", value=True)
+        use_disparity_as_z = st.checkbox("Elevate result by disparity")
 
     p1 = (p0 - T1) @ inv(R1.T)
     p2 = (p0 - T2) @ inv(R2.T)
@@ -102,11 +196,12 @@ with tabs[task - 1]:
     disparity = np.multiply(np.subtract(b2[:, 0], b1[:, 0]), 2)
 
     x, y, z = p0.T
+    z = disparity if use_disparity_as_z else z
     fig1.add_trace(
         go.Scatter3d(
             x=x,
             y=y,
-            z=disparity if use_disparity_as_z else z,
+            z=z,
             mode="markers",
             name="test",
             legendgroup="test",
@@ -114,7 +209,7 @@ with tabs[task - 1]:
         )
     )
 
-    c1_disparity = (np.array(list(zip(x, y, disparity))) - T1) @ inv(R1.T)
+    c1_disparity = (np.array(list(zip(x, y, z))) - T1) @ inv(R1.T)
     c1_disparity_projected = np.array(
         list(map(lambda p: [p[0] / p[2], p[1] / p[2], 1], c1_disparity))
     )
@@ -134,7 +229,7 @@ with tabs[task - 1]:
         )
     )
 
-    c2_disparity = (np.array(list(zip(x, y, disparity))) - T2) @ inv(R2.T)
+    c2_disparity = (np.array(list(zip(x, y, z))) - T2) @ inv(R2.T)
     c2_disparity_projected = np.array(
         list(map(lambda p: [p[0] / p[2], p[1] / p[2], 1], c2_disparity))
     )

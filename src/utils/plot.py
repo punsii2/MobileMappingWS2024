@@ -51,7 +51,9 @@ def to_homogeneous(points):
     return np.concatenate([points, pad], axis=-1)
 
 
-def init_figure(size: int = 1000) -> go.Figure:
+def init_figure(
+    size: int = 1000, eye={"x": 0.7, "y": 1.0, "z": 1.0}, up={"x": 0, "y": 0, "z": 0}
+) -> go.Figure:
     """Initialize a 3D figure."""
     fig = go.Figure()
     axes = dict(
@@ -67,8 +69,8 @@ def init_figure(size: int = 1000) -> go.Figure:
         height=size,
         width=size,
         scene_camera=dict(
-            eye=dict(x=0.7, y=1.0, z=1.0),
-            up=dict(x=0, y=0, z=1.0),
+            eye=eye,
+            up=up,
             projection=dict(type="orthographic"),
         ),
         scene=dict(

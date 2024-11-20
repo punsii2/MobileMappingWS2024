@@ -42,7 +42,7 @@ def load_images(upload=False):
         images = read_images(image_paths)
     if images:
         h, w, _ = images[0].shape
-        return [cv.resize(image, (int(w), int(h))) for image in images]
+        return [cv.resize(image, (int(w / 2), int(h / 2))) for image in images]
     return
 
 

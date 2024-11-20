@@ -40,10 +40,10 @@ def load_images(upload=False):
         image_paths = list(Path(os.getcwd() + "/../data/LV_3/").glob("*.png"))
         image_paths += list(Path(os.getcwd() + "/../data/LV_3/").glob("*.jpg"))
         images = read_images(image_paths)
-    if images:
-        h, w, _ = images[0].shape
-        return [cv.resize(image, (int(w / 2), int(h / 2))) for image in images]
-    return
+    # Filter out images in which the grid covers only a small portion of the image
+    # This improves the result drastically
+    images = [images[i] for i in [0, 1, 4, 5, 6, 9, 11, 13]]
+    return images
 
 
 upload = st.sidebar.checkbox("Upload your own images.")
@@ -156,7 +156,7 @@ task += 1
 with tabs[task - 1]:
     st.header("Undistortion")
     h, w = images[0].shape[:2]
-    newcameramtx, roi = cv.getOptimalNewCameraMatrix(
+    new_camera_matrix, roi = cv.getOptimalNewCameraMatrix(
         camera_matrix, distortion_coefficients, (w, h), 1, (w, h)
     )
 
@@ -166,7 +166,11 @@ with tabs[task - 1]:
     for idx, image in enumerate(images):
         # undistort
         undistorted = cv.undistort(
-            image, camera_matrix, distortion_coefficients, None, newcameramtx
+            image,
+            camera_matrix,
+            distortion_coefficients,
+            None,
+            new_camera_matrix,
         )
 
         # # crop the image

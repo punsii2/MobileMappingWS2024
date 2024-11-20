@@ -1,22 +1,9 @@
 import os
-from math import pi
 from pathlib import Path
 
 import cv2 as cv
 import numpy as np
-import plotly.graph_objects as go
 import streamlit as st
-import transforms3d as tr
-from numpy.linalg import inv
-
-from utils.plot import (
-    SH,
-    SW,
-    init_figure,
-    plot_camera,
-    plot_points,
-    plot_world_coordinates,
-)
 
 EXERCISE = 6
 TASKS = 2
@@ -107,7 +94,39 @@ task += 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
-    surf = cv.xfeatures2d.SURF_create(400)
-    keypoints_left, des = surf.detectAndCompute(image_left, None)
-    keypoints_right, des = surf.detectAndCompute(image_right, None)
-    st.write(len(keypoints_left), len(keypoints_right))
+    surf = cv.xfeatures2d.SURF_create(400, upright=True)
+    keypoints_left, destinations_left = surf.detectAndCompute(image_left, None)
+    keypoints_right, destinations_right = surf.detectAndCompute(image_right, None)
+
+    image_keypoints_left = cv.drawKeypoints(
+        image_left, keypoints_left, None, (255, 0, 0), 4
+    )
+    image_keypoints_right = cv.drawKeypoints(
+        image_right, keypoints_right, None, (255, 0, 0), 4
+    )
+    st.image(image_keypoints_left)
+    st.image(image_keypoints_right)
+
+    # Match keypoints
+    # BFMatcher with default params
+    brute_force_matcher = cv.BFMatcher()
+    matches = brute_force_matcher.knnMatch(destinations_left, destinations_right, k=2)
+
+    # Apply ratio test
+    good_matches = []
+    for m, n in matches:
+        if m.distance < 0.6 * n.distance:
+            good_matches.append([m])
+
+    # cv.drawMatchesKnn expects list of lists as matches.
+    image_matches = cv.drawMatchesKnn(
+        image_left,
+        keypoints_left,
+        image_right,
+        keypoints_right,
+        good_matches,
+        None,
+        flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
+    )
+    st.image(image_matches)
+    st.code(f"{len(good_matches)=}")

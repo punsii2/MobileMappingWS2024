@@ -184,6 +184,42 @@ def plot_camera(
         hovertemplate=name,
     )
     fig.add_trace(pyramid)
+    x_axis = go.Scatter3d(
+        x=[t[0], t[0] + 0.3],
+        y=[t[1], t[1]],
+        z=[t[2], t[2]],
+        mode="lines",
+        legendgroup=name,
+        name="Camera x axis",
+        line=dict(color="blue", width=5),
+        showlegend=False,
+        hovertemplate=name + " x axis" if name else None,
+    )
+    y_axis = go.Scatter3d(
+        x=[t[0], t[0]],
+        y=[t[1], t[1] + 0.3],
+        z=[t[2], t[2]],
+        mode="lines",
+        legendgroup=name,
+        name="Camera y axis",
+        line=dict(color="red", width=5),
+        showlegend=False,
+        hovertemplate=name + " y axis" if name else None,
+    )
+    z_axis = go.Scatter3d(
+        x=[t[0], t[0]],
+        y=[t[1], t[1]],
+        z=[t[2], t[2] + 0.3],
+        mode="lines",
+        legendgroup=name,
+        name="Camera z axis",
+        line=dict(color="green", width=5),
+        showlegend=False,
+        hovertemplate=name + " z axis" if name else None,
+    )
+    fig.add_trace(x_axis)
+    fig.add_trace(y_axis)
+    fig.add_trace(z_axis)
 
 
 def plot_world_coordinates(

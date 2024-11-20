@@ -196,17 +196,18 @@ with tabs[task - 1]:
 
     def isRot(M):
         # allclose handles floats more gracefully than equals
-        return np.allclose(
-            np.matmul(M, np.linalg.inv(M)), np.identity(3)
-        ) and np.allclose(np.linalg.det(M), 1)
+        return np.allclose(np.matmul(M, M.T), np.identity(3)) and np.allclose(
+            np.linalg.det(M), 1
+        )
 
     st.code(
         """def isRot(M):
-        # allclose handles floats more gracefully than equals
-        return np.allclose(
-            np.matmul(M, np.linalg.inv(M)), np.identity(3)
-        ) and np.allclose(np.linalg.det(M), 1)
-        """
+    # allclose handles floats more gracefully than equals
+    return (
+        np.allclose(np.matmul(M, M.T), np.identity(3))
+        and np.allclose(np.linalg.det(M), 1.0)
+    )
+    """
     )
 
     st.write("M = ")

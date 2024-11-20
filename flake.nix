@@ -34,6 +34,7 @@
           opencv4 = super.opencv4.override {
             inherit (pkgs) gtk2;
             enableGtk2 = true;
+            enableUnfree = true;
             # enableFfmpeg = true;
           };
         };

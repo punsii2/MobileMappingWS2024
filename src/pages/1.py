@@ -2,9 +2,8 @@ import os
 from pathlib import Path
 from time import sleep
 
-import cv as cv
+import cv2 as cv
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st

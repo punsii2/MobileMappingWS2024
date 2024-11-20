@@ -9,7 +9,6 @@ import streamlit as st
 import transforms3d as tr
 from numpy.linalg import inv
 
-from utils import plot
 from utils.plot import (
     SH,
     SW,

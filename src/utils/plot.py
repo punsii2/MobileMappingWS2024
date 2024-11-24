@@ -138,7 +138,6 @@ def plot_points(
     showlegend: Optional[bool] = True,
 ):
     """Plot a set of 3D points."""
-    print(pts.shape)
     if pts.shape[1] == 3:
         x, y, z = pts.T
     else:
@@ -188,10 +187,15 @@ def plot_camera(
         hovertemplate="Camera",
     )
     fig.add_trace(pyramid)
+
+    xcords = [
+        [0, 0, 0],
+        [0.3, 0, 0],
+    ] @ R.T + t
     x_axis = go.Scatter3d(
-        x=[t[0], t[0] + 0.3],
-        y=[t[1], t[1]],
-        z=[t[2], t[2]],
+        x=xcords[:, 0],
+        y=xcords[:, 1],
+        z=xcords[:, 2],
         mode="lines",
         line=dict(color="blue", width=5),
         name=name,
@@ -199,10 +203,14 @@ def plot_camera(
         hovertemplate="X axis",
         showlegend=False,
     )
+    ycords = [
+        [0, 0, 0],
+        [0, 0.3, 0],
+    ] @ R.T + t
     y_axis = go.Scatter3d(
-        x=[t[0], t[0]],
-        y=[t[1], t[1] + 0.3],
-        z=[t[2], t[2]],
+        x=ycords[:, 0],
+        y=ycords[:, 1],
+        z=ycords[:, 2],
         mode="lines",
         line=dict(color="red", width=5),
         name=name,
@@ -210,10 +218,14 @@ def plot_camera(
         hovertemplate="Y axis",
         showlegend=False,
     )
+    zcords = [
+        [0, 0, 0],
+        [0, 0, 0.3],
+    ] @ R.T + t
     z_axis = go.Scatter3d(
-        x=[t[0], t[0]],
-        y=[t[1], t[1]],
-        z=[t[2], t[2] + 0.3],
+        x=zcords[:, 0],
+        y=zcords[:, 1],
+        z=zcords[:, 2],
         mode="lines",
         line=dict(color="green", width=5),
         name=name,

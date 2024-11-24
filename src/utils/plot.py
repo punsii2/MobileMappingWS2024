@@ -135,6 +135,7 @@ def plot_points(
     ps: int = 4,
     colorscale: Optional[str] = None,
     name: Optional[str] = None,
+    showlegend: Optional[bool] = True,
 ):
     """Plot a set of 3D points."""
     print(pts.shape)
@@ -149,6 +150,7 @@ def plot_points(
         mode="markers",
         name=name,
         legendgroup=name,
+        showlegend=showlegend,
         marker=dict(size=ps, color=color, line_width=0.0, colorscale=colorscale),
     )
     fig.add_trace(tr)
@@ -161,7 +163,6 @@ def plot_camera(
     name: Optional[str] = None,
 ):
     """Plot a camera frustum from pose and intrinsic matrix."""
-
     R = W[0:3, 0:3]
     t = W[0:3, 3]
     corners = BASE_CAMERA_CORNERS @ R.T + t
@@ -181,11 +182,10 @@ def plot_camera(
         y=y,
         z=z,
         mode="lines",
-        legendgroup=name,
-        name="Camera",
         line=dict(color=color, width=5),
-        showlegend=False,
-        hovertemplate=name,
+        name=name,
+        legendgroup=name,
+        hovertemplate="Camera",
     )
     fig.add_trace(pyramid)
     x_axis = go.Scatter3d(
@@ -193,33 +193,33 @@ def plot_camera(
         y=[t[1], t[1]],
         z=[t[2], t[2]],
         mode="lines",
-        legendgroup=name,
-        name="Camera x axis",
         line=dict(color="blue", width=5),
+        name=name,
+        legendgroup=name,
+        hovertemplate="X axis",
         showlegend=False,
-        hovertemplate=name + " x axis" if name else None,
     )
     y_axis = go.Scatter3d(
         x=[t[0], t[0]],
         y=[t[1], t[1] + 0.3],
         z=[t[2], t[2]],
         mode="lines",
-        legendgroup=name,
-        name="Camera y axis",
         line=dict(color="red", width=5),
+        name=name,
+        legendgroup=name,
+        hovertemplate="Y axis",
         showlegend=False,
-        hovertemplate=name + " y axis" if name else None,
     )
     z_axis = go.Scatter3d(
         x=[t[0], t[0]],
         y=[t[1], t[1]],
         z=[t[2], t[2] + 0.3],
         mode="lines",
-        legendgroup=name,
-        name="Camera z axis",
         line=dict(color="green", width=5),
+        name=name,
+        legendgroup=name,
+        hovertemplate="Z axis",
         showlegend=False,
-        hovertemplate=name + " z axis" if name else None,
     )
     fig.add_trace(x_axis)
     fig.add_trace(y_axis)
@@ -234,15 +234,21 @@ def plot_world_coordinates(
 ):
     # Add the x-axis
     fig.add_trace(
-        go.Scatter3d(x=xrange, y=[0, 0], z=[0, 0], mode="lines", name="x-axis")
+        go.Scatter3d(
+            x=xrange, y=[0, 0], z=[0, 0], mode="lines", name="x-axis", showlegend=False
+        )
     )
 
     # Add the y-axis
     fig.add_trace(
-        go.Scatter3d(x=[0, 0], y=yrange, z=[0, 0], mode="lines", name="y-axis")
+        go.Scatter3d(
+            x=[0, 0], y=yrange, z=[0, 0], mode="lines", name="y-axis", showlegend=False
+        )
     )
 
     # Add the z-axis
     fig.add_trace(
-        go.Scatter3d(x=[0, 0], y=[0, 0], z=zrange, mode="lines", name="z-axis")
+        go.Scatter3d(
+            x=[0, 0], y=[0, 0], z=zrange, mode="lines", name="z-axis", showlegend=False
+        )
     )

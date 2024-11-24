@@ -137,7 +137,11 @@ def plot_points(
     name: Optional[str] = None,
 ):
     """Plot a set of 3D points."""
-    x, y, z = pts.T
+    print(pts.shape)
+    if pts.shape[1] == 3:
+        x, y, z = pts.T
+    else:
+        x, y, z, _ = pts.T
     tr = go.Scatter3d(
         x=x,
         y=y,

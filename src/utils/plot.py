@@ -52,7 +52,7 @@ def to_homogeneous(points):
 
 
 def init_figure(
-    size: int = 1000, eye={"x": 0.7, "y": 1.0, "z": 1.0}, up={"x": 0, "y": 0, "z": 0}
+    size: int = 1000, eye={"x": 0.5, "y": 1.0, "z": 0.7}, up={"x": 0, "y": 0, "z": 1}
 ) -> go.Figure:
     """Initialize a 3D figure."""
     fig = go.Figure()

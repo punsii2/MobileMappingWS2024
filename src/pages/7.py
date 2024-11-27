@@ -1,28 +1,13 @@
-import os
-from math import pi
-from pathlib import Path
-
-import cv2 as cv
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import transforms3d as tr
 from numpy.linalg import inv
-from pytransform3d.camera import world2image
-from streamlit.elements import write
 
-from utils.plot import (
-    SH,
-    SW,
-    init_figure,
-    plot_camera,
-    plot_points,
-    plot_world_coordinates,
-)
+from utils.plot import init_figure, plot_camera, plot_points, plot_world_coordinates
 
 EXERCISE = 7
-TASKS = 2
+TASKS = 1
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
@@ -48,7 +33,7 @@ plot_camera(fig1, K1, name="K1", color="red")
 
 # create Camera K2 coordinate system
 T2 = [0.5, 0, 1]
-R2 = tr.euler.euler2mat(0.1, -0.4, 0)
+R2 = tr.euler.euler2mat(-0.1, -0.4, 0)
 K2 = tr.affines.compose(T2, R2, np.ones(3))
 plot_camera(fig1, K2, name="K2", color="blue")
 
@@ -111,6 +96,7 @@ plot_points(fig1, pointsK2, "blue", name="points in K2 coordinate system")
 st.plotly_chart(fig1)
 
 # scale points in order to have pixel-values as coordinates
+pixelsK1 = M1 @ pointsK1.T
 pixelsK2 = M2 @ pointsK2.T
 fig2 = init_figure()
 fig2.update_layout(
@@ -148,9 +134,9 @@ S = [
     [-B[1], B[0], 0],
 ]
 R = inv(R1) @ R2
-st.write(PointsK2.T)
-st.write(T @ PointsK2.T)
-st.write(PointsK1.T)
+# st.write(PointsK2.T)
+# st.write(T @ PointsK2.T)
+# st.write(PointsK1.T) => same as above => correct Transform
 
 E = R @ S
 st.code(f"E = R @ S = \n{E}")
@@ -158,10 +144,13 @@ st.code(f"E = R @ S = \n{E}")
 # st.write(PointsK1[:, 0:3] @ E @ PointsK2[:, 0:3].T)
 
 tmp = [13, 17, 1]
-st.write(inv(M1))
-st.write(M1 @ tmp)
-st.write(inv(M1) @ M1 @ tmp)
+# st.write(inv(M1))
+# st.write(M1 @ tmp)
+# st.write(inv(M1) @ M1 @ tmp)
 F = inv(M1).T @ E @ inv(M2)
 st.code(f"F = inv(M1) @ E @ inv(M2)\n{F}")
 
-st.write(pointsK1[:, 0:3] @ F @ pointsK2[:, 0:3].T)
+st.code("pixelsK1.T @ F @ pixelsK2 = ")
+st.write(pixelsK1.T @ F @ pixelsK2)
+st.code(f"max(pixelsK1.T @ F @ pixelsK2.T) = {max((pixelsK1.T @ F @ pixelsK2)[1])}")
+st.code(f"min(pixelsK1.T @ F @ pixelsK2.T) = {min((pixelsK1.T @ F @ pixelsK2)[1])}")

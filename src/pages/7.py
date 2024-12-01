@@ -133,24 +133,25 @@ S = [
     [B[2], 0, -B[0]],
     [-B[1], B[0], 0],
 ]
+# calculate combined rotation
 R = inv(R1) @ R2
-# st.write(PointsK2.T)
-# st.write(T @ PointsK2.T)
-# st.write(PointsK1.T) => same as above => correct Transform
 
+# calculate E - Matrix
 E = R @ S
 st.code(f"E = R @ S = \n{E}")
-# st.write(PointsK1[:, 0:3] @ E @ PointsK2[:, 0:3].T)
-# st.write(PointsK1[:, 0:3] @ E @ PointsK2[:, 0:3].T)
 
-tmp = [13, 17, 1]
-# st.write(inv(M1))
-# st.write(M1 @ tmp)
-# st.write(inv(M1) @ M1 @ tmp)
+
+# calculate f matrix
 F = inv(M1).T @ E @ inv(M2)
-st.code(f"F = inv(M1) @ E @ inv(M2)\n{F}")
+st.code(f"F = inv(M1) @ E @ inv(M2) = \n{F}")
 
+# check if f-matrix is correct
+f1, f2 = st.columns(2)
+f1.latex(r" \widetilde{p}_R^T F \widetilde{p}_L = 0")
+f2.text("Slide 60, Formula (111)")
 st.code("pixelsK1.T @ F @ pixelsK2 = ")
 st.write(pixelsK1.T @ F @ pixelsK2)
 st.code(f"max(pixelsK1.T @ F @ pixelsK2.T) = {max((pixelsK1.T @ F @ pixelsK2)[1])}")
 st.code(f"min(pixelsK1.T @ F @ pixelsK2.T) = {min((pixelsK1.T @ F @ pixelsK2)[1])}")
+
+st.write("Resulting values are not 0, but 'close enough' to zero :)")

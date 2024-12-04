@@ -7,7 +7,6 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import utils
-from utils.plot import init_figure
 
 EXERCISES = 6
 TITLE = f"Project"
@@ -28,18 +27,9 @@ with tabs[exercise - 6]:
 
     scale = 0.3
     # read an image from disk
-    images_left = [
-        cv.resize(cv.imread(str(p)), (0, 0), fx=scale, fy=scale) for p in PATHS_LEFT
-    ]
-    images_right = [
-        cv.resize(cv.imread(str(p)), (0, 0), fx=scale, fy=scale) for p in PATHS_RIGHT
-    ]
-    disparities = [
-        cv.cvtColor(
-            cv.resize(cv.imread(str(p)), (0, 0), fx=scale, fy=scale), cv.COLOR_BGR2GRAY
-        )
-        for p in PATHS_DISPARITY
-    ]
+    images_left = [utils.load_image(p, scale=scale) for p in PATHS_LEFT]
+    images_right = [utils.load_image(p, scale=scale) for p in PATHS_RIGHT]
+    disparities = [utils.load_image(p, scale=scale, gray=True) for p in PATHS_DISPARITY]
 
     ca1, ca2 = [], []
     columns = st.columns(2)
@@ -101,7 +91,7 @@ with tabs[exercise - 6]:
                     f'rgb{np.array2string(image[w][h], separator=",").replace("[", "(").replace("]", ")")}'
                 )
 
-        point_cloud = init_figure(
+        point_cloud = utils.init_figure(
             eye={"x": 0, "y": 0, "z": 1.0}, up={"x": 1, "y": 0, "z": 0}
         )
         points_reconstructed = np.stack((x.ravel(), y.ravel(), z.ravel()), axis=1)

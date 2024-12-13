@@ -5,8 +5,10 @@ import cv2 as cv
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
+from scipy.io import loadmat
 
 import utils
+from utils.plot import plot_points
 
 EXERCISES = 6
 TITLE = f"Project"
@@ -37,13 +39,15 @@ with tabs[exercise - 6]:
     ca2.append(columns[1])
     ca1[0].write("Matching left side images:")
     ca2[0].write("Matching right side images:")
-    start_image = images_left.pop(0)
-    for idx, disparity in enumerate(images_left):
-        matches, keypoints1, keypoints2 = utils.surf_match(start_image, disparity)
+    start_image_left = images_left[0]
+    matches_left = []
+    for idx, disparity in enumerate(images_left[1:]):
+        matches, keypoints1, keypoints2 = utils.surf_match(start_image_left, disparity)
+        matches_left.append(matches)
 
         # cv.drawMatchesKnn expects list of lists as matches.
         image_matches = cv.drawMatchesKnn(
-            start_image,
+            start_image_left,
             keypoints1,
             disparity,
             keypoints2,
@@ -58,21 +62,26 @@ with tabs[exercise - 6]:
         ca1[idx + 1].image(image_matches)
         ca1[idx + 1].code(f"{len(matches)=}")
 
-    start_image = images_right.pop(0)
-    for idx, disparity in enumerate(images_right):
-        matches, keypoints1, keypoints2 = utils.surf_match(start_image, disparity)
+    start_image_right = images_right[0]
+    matches_right = []
+    for idx, disparity in enumerate(images_right[1:]):
+        matches, keypoints1, keypoints2 = utils.surf_match(start_image_right, disparity)
+        matches_right.append(matches)
         matched_images = utils.draw_matches(
-            start_image, keypoints1, disparity, keypoints2, matches
+            start_image_right, keypoints1, disparity, keypoints2, matches
         )
         columns = st.columns(2)
         ca2[idx + 1].image(matched_images)
         ca2[idx + 1].code(f"{len(matches)=}")
 
 
+DATA_PATH = Path(os.getcwd() + "/../data/Proj/")
+
 exercise += 1
 with tabs[exercise - 6]:
     st.write(f"## 7.2.{exercise}.1")
     cb1, cb2 = [], []
+    CAMERA_INTRINSICS = [[615, 0, 320], [0, 615, 240], [0, 0, 1]]
     for idx, disparity in enumerate(disparities):
         image = images_left[idx]
 
@@ -83,6 +92,16 @@ with tabs[exercise - 6]:
         cb1[idx].image(image)
         cb2[idx].image(disparity)
         x, y, z = utils.disparity_to_points(disparity)
+
+        mat = loadmat(DATA_PATH / "vSet_real.mat")
+        pose_file = Path(
+            DATA_PATH
+            / "lab40/tsukuba_ground_truth_poses/tsukuba_ground_truth_poses.txt"
+        )
+        st.write(mat)
+        st.write(type(mat))
+        print(len(mat["__function_workspace__"][0]))
+        break
         width, height, _ = image.shape
         colors = []
         for w in range(width):
@@ -114,3 +133,5 @@ with tabs[exercise - 6]:
                 )
             )
             st.plotly_chart(point_cloud)
+
+    # st.video(utils.image_to_video(images_left))

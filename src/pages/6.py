@@ -10,7 +10,6 @@ TASKS = 2
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
-task = 0
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
 
@@ -21,7 +20,7 @@ LEFT_PATH = DATA_PATH / "eiffel2-1.jpg"
 RIGHT_PATH = DATA_PATH / "eiffel2-2.jpg"
 
 
-task += 1
+task = 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     # read an image from disk
@@ -90,7 +89,7 @@ with tabs[task - 1]:
     cr3.image(image_right_top_20)
     cr3.write(np.array(max_indices_right).transpose())
 
-task += 1
+task = 2
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 

@@ -11,10 +11,8 @@ TASKS = 4
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
-task = 0
 
-task += 1
-task += 1
+task = 2
 st.write(f"## 7.1.{EXERCISE}.{task}")
 
 W = tr.affines.compose(np.zeros(3), np.identity(3), np.ones(3))
@@ -43,7 +41,7 @@ plot_points(fig1, p0, "green", name="random_samples")
 T = inv(K1) @ K2
 st.code(f"T = inv(K1) @ K2 =\n {T}")
 
-task += 1
+task = 3
 st.write(f"## 7.1.{EXERCISE}.{task}")
 st.plotly_chart(fig1)
 

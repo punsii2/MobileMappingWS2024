@@ -19,7 +19,6 @@ st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
-task = 0
 
 
 # default parameters of a camera in Blender
@@ -29,7 +28,7 @@ INTRINSIC_MATRIX = np.array(
 )
 VIRTUAL_IMAGE_DISTANCE = 10
 
-task += 1
+task = 1
 with tabs[task - 1]:
 
     st.write(f"## 7.1.{EXERCISE}.{task}")
@@ -136,7 +135,7 @@ with tabs[task - 1]:
     c3.write(txyz)
 
 
-task += 1
+task = 2
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
@@ -190,7 +189,7 @@ with tabs[task - 1]:
     st.write(getRPY(M))
 
 
-task += 1
+task = 3
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
@@ -214,7 +213,7 @@ with tabs[task - 1]:
     st.write(pd.DataFrame(M))
     st.code(f"isRot(M) = {isRot(M)}")
 
-task += 1
+task = 4
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     M4 = [

@@ -1,23 +1,11 @@
-import glob
-import os
-from math import atan2, cos, pi, sin
-from pathlib import Path
-
 import cv2 as cv
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import plotly.express as px
-import pytransform3d.camera as pc
-import pytransform3d.transformations as pt
 import streamlit as st
-import transforms3d as tr
-from plyfile import PlyData
 from streamlit_back_camera_input import back_camera_input
 
 EXERCISE = 0
 TASKS = 1
-TITLE = f"Exercise {EXERCISE}"
+TITLE = "Experiments"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
 
@@ -34,8 +22,8 @@ task += 1
 #     image = cv2.cvtColor(cv2.imread(str(KARLSTR_PATH)), cv2.COLOR_RGB2BGR)
 #     st.image(picture)
 with tabs[task - 1]:
-    st.write(f"## 7.1.{EXERCISE}.{task}")
-    st.write(f"## (Experiments)")
+    st.write(f"## 7.1.0.{task}")
+    st.write("## (Experiments)")
 
     # termination criteria
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)

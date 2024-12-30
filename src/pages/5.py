@@ -23,12 +23,11 @@ TASKS = 2
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
-task = 0
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
 
 
-task += 1
+task = 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
@@ -114,7 +113,7 @@ with tabs[task - 1]:
     st.plotly_chart(point_cloud)
 
 
-task += 1
+task = 2
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     st.write(f"# Color the disparity ")

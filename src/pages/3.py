@@ -12,7 +12,6 @@ TASKS = 3
 TITLE = f"Exercise {EXERCISE}"
 st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
 st.sidebar.header(TITLE)
-task = 0
 
 
 @st.cache_data()
@@ -54,7 +53,7 @@ num_images = len(images)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
 
-task += 1
+task = 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 
@@ -146,13 +145,13 @@ with tabs[task - 1]:
         st.write("distortion_coefficients:")
         st.write(distortion_coefficients)
 
-task += 1
+task = 2
 with tabs[task - 1]:
     st.write(
         "At this point I do not have access to Matlab or the required images that are part of the Vision Toolbox."
     )
 
-task += 1
+task = 3
 with tabs[task - 1]:
     st.header("Undistortion")
     h, w = images[0].shape[:2]

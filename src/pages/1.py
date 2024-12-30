@@ -16,9 +16,8 @@ st.set_page_config(page_title=TITLE, page_icon="🗺️")
 st.sidebar.header(TITLE)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, TASKS + 1))))
-task = 0
 
-task += 1
+task = 1
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     DATA_PATH = Path(os.getcwd() + "/../data/LV_1/")
@@ -30,7 +29,7 @@ with tabs[task - 1]:
 
     st.write(f"{image.shape=}" + " (rows, columns, channels)")
 
-task += 1
+task = 2
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -57,7 +56,7 @@ with tabs[task - 1]:
     """
     )
 
-task += 1
+task = 3
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     scale = 0.1
@@ -106,7 +105,7 @@ with tabs[task - 1]:
     st.image(apply_black_mask(image_gray, width))
 
 
-task += 1
+task = 4
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
     st.button("Rerun animation")
@@ -138,7 +137,7 @@ with tabs[task - 1]:
 
     st.video(video)
 
-task += 1
+task = 5
 with tabs[task - 1]:
     st.write(f"## 7.1.{EXERCISE}.{task}")
 

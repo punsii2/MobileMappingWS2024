@@ -2,7 +2,7 @@ import streamlit as st
 
 WEEKS = 13
 TITLE = "FAQs"
-st.set_page_config(page_title=TITLE, page_icon="🗺️", layout="wide")
+st.set_page_config(page_title=TITLE, page_icon="🗺️")
 st.sidebar.header(TITLE)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, WEEKS + 1))))
@@ -15,8 +15,8 @@ tabs[0].markdown(
 ### Wie lassen sich folgende Begriffe erläutern?
 
 #### 1. Intrinsischen und extrinsische Kameraparameter  
-Intrinsisch $\coloneqq$ 'konstante' Eigenschaften der Kamera (Focal Length, Aspect Ratio, Verzerrungsparameter)  
-Extrinsich $\coloneqq$ Eigenschaften der Kamera relativ zur Umwelt (Position, Blickrichtung)
+Intrinsisch $\\coloneqq$ 'konstante' Eigenschaften der Kamera (Focal Length, Aspect Ratio, Verzerrungsparameter)  
+Extrinsich $\\coloneqq$ Eigenschaften der Kamera relativ zur Umwelt (Position, Blickrichtung)
 
 #### 2. Standardstereogeometrie  
 Zwei Kameras, parallel zueinander, beide Bildebenen in der gleichen Ebene
@@ -31,7 +31,7 @@ Methode um Verzeichnungsparameter (radial + axial) zu bestimmen.
 Bild, in dem jeder Pixel einen Wert hat, der beschreibt, wie viele Pixel Unterschied horizontal zwischen der Projektion des selben Weltpunktes in zwei unterschiedliche Kamerabildern besteht. Benötigt Standardstereogeometrie.
 
 #### 6. SIFT  
-Scale Invariant Feature Transform  $\implies$ Algorithmus der Markante Punkte in Bildern identifiziert. Hilfreich, um die gleichen markanten Punkte in zwei Bildern zu zuzuordnen.
+Scale Invariant Feature Transform  $\\implies$ Algorithmus der Markante Punkte in Bildern identifiziert. Hilfreich, um die gleichen markanten Punkte in zwei Bildern zu zuzuordnen.
 
 #### 7. Epipolargeometrie berechnen  
 Berechnung der relativen Lage zweier Bilder zueinander.
@@ -61,8 +61,8 @@ Korrespondierende Punkte zischen Bildern suchen (nach Anwendung von SIFT).
 Dateiformate zum Speichern von 3D Punktewolken.
 
 #### 16. Pose und Homogene Matrix  
-Pose $\coloneqq$ Position+Orientierung  
-Homogene Matrix $\coloneqq$ Matrix, die die Parameter der Pose enthält.
+Pose $\\coloneqq$ Position+Orientierung  
+Homogene Matrix $\\coloneqq$ Matrix, die die Parameter der Pose enthält.
 
 ***
 
@@ -86,41 +86,110 @@ tabs[1].markdown(
 # 6.1.2 GEWEGUNG IM $IR^3$, KOORDINATENSYSTEME (WOCHE 2)
 ## Zu Kap. 2.1, Kap. 2.2, Kap. 2.3, Kap. 2.4, Kap. 2.5
 #### 1. Wie ist das Skalarprodukt definiert?
-Summe der paarweisen Produkte aller Komponenten zweier Vektoren.  
-$ u, v \coloneqq (u_0 v_0 + .. + u_n v_n) $
+Summe der paarweisen Produkte aller Komponenten zweier Vektoren.
+$ \\langle u, v \\rangle \\coloneqq \\sum_{i=0}^{n}u_n v_n $
 
 #### 2. Wie kann der Winkel zwischen zwei Vektoren berechnet werden?
+Über das Skalarprodukt:
+$ \\alpha = cos^{-1}(\\frac{\\langle u, v \\rangle}{||u|| ||v||})$
 
 #### 3. Wie kann überprüft werden, ob zwei Vektoren rechtwinklig (=orthogonal) aufeinander stehen?
+Wenn ihr Skalarprudukt gleich 0 ist. Siehe 2.: $ cos^{-1}(0) = 0 $
 
 #### 4. Wie ist das Vektorprodukt definiert?
+$ u \\times v \\coloneqq ||u|| ||v|| sin(\\theta)n $  
+Wobei n ein Vektor im $IR^3$ ist und rechtwinklig auf u und v steht.
+Es gilt auch:  
+$ u \\times v = \\begin{bmatrix}
+u_2 v_3 - u_3 v_2 \\\\
+u_3 v_1 - u_1 v_3 \\\\
+u_1 v_2 - u_2 v_1 \\\\
+\\end{bmatrix} $  
 
-#### 5. Wie ist der Zusammenhang zwischen "rechter Hand" und Vektorprodukt?
+#### 5. Wie ist der Zusammenhang zwischen "rechter Hand" und Vektorprodukt?  
+Das Vektorprodukt berechnet aus den Vektoren u und v einen dritten Vektor w, der Rechwinklig auf u und v steht. u, v und w spannen daher ein Koordinatensystem auf.
 
-#### 6. Wie lautet die Matrix/Vektor Form des Vektorproduktes?
+#### 6. Wie lautet die Matrix/Vektor Form des Vektorproduktes?  
+Umformen von 4.):  
+$ u \\times v = \\begin{bmatrix}
+ 0   & -u_3 &  u_2 \\\\
+ u_3 &  0   & -u_1 \\\\
+-u_2 &  u_1 &  0   \\\\
+\\end{bmatrix}
+\\begin{bmatrix}
+ v_1 \\\\
+ v_2 \\\\
+ v_3 \\\\
+\\end{bmatrix} $  
 
-#### 7. Welche Eigenschaften hat eine Rotation?
+#### 7. Welche Eigenschaften hat eine Rotation?  
+Die Inverse ist gleich der Transponierten und die Determinante ist +1.
 
-#### 8. Wie lautet der Unterschied zwischen einer Rotation und einer Spiegelung? (nicht im Skript)
+#### 8. Wie lautet der Unterschied zwischen einer Rotation und einer Spiegelung? (nicht im Skript)  
+(Doch im Skript): Determinante = -1
 
-#### 9. Gegeben sei eine 3 x3 Matrix. Wie kann überprüft werden, ob es sich um eine Rotation handelt?
+#### 9. Gegeben sei eine 3 x3 Matrix. Wie kann überprüft werden, ob es sich um eine Rotation handelt?  
+Auszug aus Praktikum:  
+```python
+def isRot(M):  
+    # allclose handles floats more gracefully than equals  
+    return (  
+        np.allclose(np.matmul(M, M.T), np.identity(3))  
+        and np.allclose(np.linalg.det(M), 1.0)  
+    )  
+```
 
-#### 10. Wie kann eine Translation und Rotation als homogene Matrix dargestellt werden?
 
-#### 11. Welche Vorteile hat das Rechnen mit homogenen Matrizen? (nicht im Skript)
+#### 10. Wie kann eine Translation und Rotation als homogene Matrix dargestellt werden?  
+In der Form $ \\begin{bmatrix}
+ R & T \\\\
+ 0 & 1 \\\\
+\\end{bmatrix} =
+\\begin{bmatrix}
+ r_11 & r_12 & r_13 & t_1  \\\\
+ r_21 & r_22 & r_23 & t_2  \\\\
+ r_31 & r_32 & r_33 & t_3  \\\\
+ 0    & 0    & 0    & 1    \\\\
+\\end{bmatrix} $
+
+#### 11. Welche Vorteile hat das Rechnen mit homogenen Matrizen? (nicht im Skript)  
+Rotation + Translation können durch einfache Matrixmultiplikation durchegführt werden  
+=> Effizienter und einfacher zu verstehen.
 
 #### 12. Wie kann eine homogene Matrix als Koordinatensystem interpretiert werden?
+Die Translation und jeweils jede Zeile der Rotation sind je ein Basisvektor.  
+Das Resultierende Koordinatensystemist affin, orgthogonal und orientierungstreu.
 
-#### 13. Wie lässt sich aus einer homogenen Matrix der Koordinatenursprung, sowie die Achsen berechnen? (nicht im Skript)
+#### 13. Wie lässt sich aus einer homogenen Matrix der Koordinatenursprung, sowie die Achsen berechnen? (nicht im Skript)  
+Ursprung = $(0,0,0,0)$ ?!  
+Achsen = $(T, (r_{11}-r_{13}), (r_{21}-r_{23}), (r_{31}-r_{33})$)
 
 #### 14. Was versteht man unter einem affinen, orthogonalen und orientierungstreuen Koordinatensystem?
+Affin = Grob zu verstehen als euklidisches System.  
+Orthogonal = Alle Basisvektoren schneiden sich immer rechtwinklig.  
+Orientierungstreu = Gegeben wenn $det(R) = 1$  
 
-#### 15. Was versteht man unter der RPY Darstellung einer Drehung?
+#### 15. Was versteht man unter der RPY Darstellung einer Drehung?  
+Aufteilung in Roll (Kippen nach links/rechts)   
+Pitch (Kippen nach vorne/hinten)   
+Yaw (horizontale Dreheung nach links/rechts)  
 
 #### 16. Wie lassen sich aus der RPY Darstellung einer Drehung die drei Winkel zurückrechnen?
+Aufwändiges Gleichungssystem (tippe ich hier jetzt nicht ab...)  
+Auszug aus Praktikum:  
+```python
+def getRPY(R):
+    y = atan2(R[1, 0], R[0, 0])
+    p = atan2(-R[2, 0], R[0, 0] * cos(y) + R[1, 0] * sin(y))
+    r = atan2(R[2, 1] / cos(p), R[2, 2] / cos(p))
+    return [r, p, y]
+```
+
 
 #### 17. Welche anderen Darstellungen für Drehungen gibt es noch?
-
+- Euler Axis+Angle
+- Rotation Matrix
+- Quaternions
 """
 )
 

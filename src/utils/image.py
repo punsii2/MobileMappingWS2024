@@ -26,7 +26,7 @@ def image_to_video(images):
     tmppath.touch()
 
     writer = cv.VideoWriter(
-        str(tmppath), cv.VideoWriter_fourcc(*"avc1"), 1, (width, height)
+        str(tmppath), cv.VideoWriter_fourcc(*"avc1"), 5, (width, height)
     )
     for image in images:
         writer.write(image)

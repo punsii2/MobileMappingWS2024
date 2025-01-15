@@ -251,6 +251,10 @@ with tabs[exercise - 1]:
 
         valid_keypoints_origin = np.array([e[0] for e in keypoints_origin[EMask]])
         valid_keypoints_target = np.array([e[0] for e in keypoints_target[EMask]])
+        st.code(f"{np.linalg.matrix_rank(F)=}")
+        st.code(f"{np.linalg.eigvals(F)=}")
+        st.code(f"{np.linalg.matrix_rank(E)=}")
+        st.code(f"{np.linalg.eigvals(E)=}")
         _, R, t, _ = cv.recoverPose(
             E,
             valid_keypoints_origin,
@@ -284,7 +288,7 @@ with tabs[exercise - 1]:
                 [0, 0, 0, 1],
             ]
         )
-        plot_camera(fig, W, name="Left Camera", color="blue")
+        plot_camera(fig, W, name="Left Camera", color="blue", scale=0.4)
 
     for i in range(len(rotations_right)):
         R = rotations_right[i]
@@ -297,6 +301,6 @@ with tabs[exercise - 1]:
                 [0, 0, 0, 1],
             ]
         )
-        plot_camera(fig, W, name="Right Camera", color="red")
+        plot_camera(fig, W, name="Right Camera", color="red", scale=0.4)
 
     st.plotly_chart(fig)

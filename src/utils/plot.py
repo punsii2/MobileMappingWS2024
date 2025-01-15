@@ -160,11 +160,12 @@ def plot_camera(
     W: np.ndarray,  # W, from camera to world, size (4,4)
     color: str = "black",
     name: Optional[str] = None,
+    scale: float = 1.0,
 ):
     """Plot a camera frustum from pose and intrinsic matrix."""
     R = W[0:3, 0:3]
     t = W[0:3, 3]
-    corners = BASE_CAMERA_CORNERS @ R.T + t
+    corners = (BASE_CAMERA_CORNERS * scale) @ R.T + t
 
     x, y, z = np.concatenate(([t], corners)).T
     i = [0, 0, 0, 0]

@@ -16,7 +16,7 @@ st.sidebar.header(TITLE)
 
 tabs = st.tabs(list(map(lambda x: str(x), range(1, EXERCISES + 1))))
 
-DATA_PATH = Path(os.getcwd() + "/../data/Proj/lab40")
+DATA_PATH = Path(os.getcwd() + "/../data/Proj/lab10")
 PATHS_LEFT = sorted((DATA_PATH / "mod/left/").glob("*.jpg"))
 PATHS_RIGHT = sorted((DATA_PATH / "mod/right/").glob("*.jpg"))
 PATHS_DISPARITY = sorted((DATA_PATH / "mod/disp/").glob("*.jpg"))
